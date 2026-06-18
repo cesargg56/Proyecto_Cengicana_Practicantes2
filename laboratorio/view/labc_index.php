@@ -173,6 +173,7 @@ $mieles = labc_visible_analysis([
 ]);
 
 $canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
+$canAnalisis = lab_can('laboratorio.analisis.ver');
 $canBlancoControl = lab_can('laboratorio.blanco_control.ver');
 $canConsolidacion = lab_can('laboratorio.consolidacion.ver');
 $canManageUsers = lab_can('laboratorio.usuarios.gestionar');
@@ -215,6 +216,14 @@ if ($canConsolidacion) {
         'href' => '../controllers/consolidacion_controller.php',
         'label' => 'Hoja de consolidación',
         'icon' => 'fa-layer-group',
+    ];
+}
+if ($canAnalisis) {
+    $utilityCards[] = [
+        'key' => 'analisis.catalogo',
+        'href' => '../catalogo_analisis.php',
+        'label' => 'Catálogo de análisis',
+        'icon' => 'fa-table-list',
     ];
 }
 $utilityCards = labc_prepare_cards($utilityCards, 'consolidacion');

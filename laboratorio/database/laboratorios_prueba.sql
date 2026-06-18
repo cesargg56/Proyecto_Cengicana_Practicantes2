@@ -2549,6 +2549,7 @@ CREATE TABLE `tipo_analisis` (
   `id_tipo` int NOT NULL AUTO_INCREMENT,
   `id_tipo_muestra` int DEFAULT NULL,
   `nombre` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id_tipo`),
   KEY `fk_tipo_analisis_tipo_muestra` (`id_tipo_muestra`),
   CONSTRAINT `fk_tipo_analisis_tipo_muestra` FOREIGN KEY (`id_tipo_muestra`) REFERENCES `tipo_muestra` (`id_tipo`)
@@ -2561,7 +2562,7 @@ CREATE TABLE `tipo_analisis` (
 
 LOCK TABLES `tipo_analisis` WRITE;
 /*!40000 ALTER TABLE `tipo_analisis` DISABLE KEYS */;
-INSERT INTO `tipo_analisis` VALUES (1,4,'Sólidos totales disueltos (STD)'),(2,4,'pH'),(3,4,'Conductividad elÃ©ctrica (CE)'),(4,4,'SÃ³lidos totales disueltos (STD)'),(5,4,'Dureza total (CaCOâ‚ƒ)'),(6,4,'Coliformes totales y fecales'),(7,4,'Nitratos / Nitritos'),(8,1,'Textura'),(9,1,'Humedad gravimÃ©trica'),(10,1,'Porosidad total'),(11,1,'Densidad aparente'),(12,1,'Densidad real'),(13,1,'pH'),(14,1,'Materia orgÃ¡nica'),(15,1,'NitrÃ³geno total'),(16,1,'FÃ³sforo disponible'),(17,1,'Potasio intercambiable'),(18,1,'CIC (capacidad de intercambio catiÃ³nico)'),(19,2,'Fibra bruta');
+INSERT INTO `tipo_analisis` VALUES (1,4,'Sólidos totales disueltos (STD)',1),(2,4,'pH',1),(3,4,'Conductividad elÃ©ctrica (CE)',1),(4,4,'SÃ³lidos totales disueltos (STD)',1),(5,4,'Dureza total (CaCOâ‚ƒ)',1),(6,4,'Coliformes totales y fecales',1),(7,4,'Nitratos / Nitritos',1),(8,1,'Textura',1),(9,1,'Humedad gravimÃ©trica',1),(10,1,'Porosidad total',1),(11,1,'Densidad aparente',1),(12,1,'Densidad real',1),(13,1,'pH',1),(14,1,'Materia orgÃ¡nica',1),(15,1,'NitrÃ³geno total',1),(16,1,'FÃ³sforo disponible',1),(17,1,'Potasio intercambiable',1),(18,1,'CIC (capacidad de intercambio catiÃ³nico)',1),(19,2,'Fibra bruta',1);
 /*!40000 ALTER TABLE `tipo_analisis` ENABLE KEYS */;
 UNLOCK TABLES;
 

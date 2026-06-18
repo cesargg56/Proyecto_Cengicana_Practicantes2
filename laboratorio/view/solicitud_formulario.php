@@ -2,9 +2,13 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../conexion.php';
 require_once __DIR__ . '/../includes/solicitud_formulario_helpers.php';
+require_once __DIR__ . '/../includes/catalogo_analisis_helper.php';
 
 lab_require_module_access();
 asegurarColumnasFirmasSolicitud($conexion);
+labCatalogoAnalisisAsegurarEsquema($conexion);
+
+$catalogoAnalisis = labCatalogoAnalisisFormularioData($conexion);
 
 $message = '';
 $dbWarning = '';
@@ -34,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $firmaRecibe = normalizarFirmaSolicitud($_POST['firma_recibe'] ?? '');
     $analisisSeleccionados = $_POST['analisis'] ?? [];
     $idSolicitud = $idSolicitudPost;
+
+    if (!is_array($analisisSeleccionados)) {
+      $analisisSeleccionados = [$analisisSeleccionados];
+    }
 
     if ($codigoLote === '') {
       throw new RuntimeException('Ingrese o seleccione un número de lote.');
@@ -110,11 +118,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $conexion->prepare("DELETE FROM solicitud_analisis WHERE id_solicitud = ?")->execute([$idSolicitud]);
     $insertSolicitudAnalisis = $conexion->prepare("INSERT INTO solicitud_analisis (id_solicitud, id_tipo_analisis) VALUES (?, ?)");
 
-    foreach ($analisisSeleccionados as $nombreAnalisis) {
-      $nombreAnalisis = trim($nombreAnalisis);
-      if ($nombreAnalisis === '') continue;
+    $analisisPermitidos = [];
+    foreach (($catalogoAnalisis[$tipoFormulario]['items'] ?? []) as $analisisDisponible) {
+      $analisisPermitidos[(int) ($analisisDisponible['id_tipo'] ?? 0)] = true;
+    }
 
-      $idTipoAnalisis = obtenerTipoAnalisis($conexion, $tipoMuestra['id_tipo'], $nombreAnalisis);
+    foreach ($analisisSeleccionados as $idAnalisisSeleccionado) {
+      $idTipoAnalisis = (int) $idAnalisisSeleccionado;
+      if ($idTipoAnalisis <= 0) {
+        continue;
+      }
+
+      if (!isset($analisisPermitidos[$idTipoAnalisis])) {
+        throw new RuntimeException('Uno de los análisis seleccionados ya no está disponible para este tipo de muestra.');
+      }
+
       $insertSolicitudAnalisis->execute([$idSolicitud, $idTipoAnalisis]);
       insertarLoteAnalisis($conexion, $idRango, $idTipoAnalisis);
     }
@@ -418,6 +436,7 @@ try {
   </div>
 <script type="application/json" id="solicitudes-db"><?php echo json_encode($solicitudesDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
 <script type="application/json" id="correlativos-db"><?php echo json_encode($correlativosDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
+<script type="application/json" id="analisis-catalogo"><?php echo json_encode($catalogoAnalisis, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
 <script src="../node_modules/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="../js/solicitud_formulario.js?v=5"></script>
 </body>
