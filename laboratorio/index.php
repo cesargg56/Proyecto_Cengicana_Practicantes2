@@ -3,11 +3,13 @@ require_once __DIR__ . '/includes/auth.php';
 
 lab_require_module_access();
 
-$canAnalisis = lab_can('laboratorio.analisis.ver');
+$canAnalisis = lab_can('laboratorio.formularios_labc.ver') || lab_can('laboratorio.analisis.ver');
 $canConsolidacion = lab_can('laboratorio.consolidacion.ver');
 $canLotes = lab_can('laboratorio.lotes.ver');
+$canLabc = lab_can('laboratorio.labc.ver');
 $canBlancoControl = lab_can('laboratorio.blanco_control.ver');
 $canFormulariosErroneos = lab_can_view_error_forms();
+$canFormulariosPendientes = lab_can('laboratorio.formularios_pendientes.ver') || lab_is_technician();
 $canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
 
 $nuevoAnalisisCards = [
@@ -98,7 +100,7 @@ function labNuevoAnalisisUrl(string $tipo): string
             </li>
         <?php endif; ?>
 
-        <?php if (lab_is_technician()): ?>
+        <?php if ($canFormulariosPendientes): ?>
             <li>
                 <a href="view/solicitudes_pendientes_tecnico.php">
                     <i class="fas fa-clipboard-list"></i>
@@ -107,7 +109,7 @@ function labNuevoAnalisisUrl(string $tipo): string
             </li>
         <?php endif; ?>
 
-        <?php if ($canAnalisis || $canBlancoControl || $canConsolidacion): ?>
+        <?php if ($canLabc || $canAnalisis || $canBlancoControl || $canConsolidacion): ?>
             <li>
                 <a href="view/labc_index.php">
                     <i class="fas fa-flask-vial"></i>
