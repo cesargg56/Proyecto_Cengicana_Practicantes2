@@ -89,8 +89,8 @@ function columnasAnalisisRevision(array $tabla): array
         <div class="alerta error"><?= eRevision($errorRevision) ?></div>
     <?php endif; ?>
 
-    <?php if (!$puedeAprobarRevision): ?>
-        <div class="alerta">Solo puede ver esta revision. Para editar o aprobar se necesita permiso de aprobacion.</div>
+    <?php if (!$puedeEditarRevision && !$puedeGuardarErrores): ?>
+        <div class="alerta">Solo puede ver esta revision. Para editar, aprobar o marcar errores se necesitan permisos adicionales.</div>
     <?php endif; ?>
 
     <?php if (empty($formulariosRevision)): ?>
@@ -131,7 +131,7 @@ function columnasAnalisisRevision(array $tabla): array
                                         type="date"
                                         name="formulario[<?= $idFormulario ?>][fecha]"
                                         value="<?= eRevision($formulario['fecha'] ?? '') ?>"
-                                        <?= $puedeAprobarRevision ? '' : 'disabled' ?>>
+                                        <?= $puedeEditarRevision ? '' : 'disabled' ?>>
                                 </div>
                                 <div class="field">
                                     <label>Analista</label>
@@ -140,11 +140,11 @@ function columnasAnalisisRevision(array $tabla): array
                                         name="formulario[<?= $idFormulario ?>][analista]"
                                         value="<?= eRevision($formulario['analista'] ?? '') ?>"
                                         placeholder="Nombre del analista"
-                                        <?= $puedeAprobarRevision ? '' : 'disabled' ?>>
+                                        <?= $puedeEditarRevision ? '' : 'disabled' ?>>
                                 </div>
                                 <div class="field full">
                                     <label>Observaciones de revision</label>
-                                    <textarea name="comentario_revision[<?= $idFormulario ?>]" placeholder="Opcional..." <?= $puedeAprobarRevision ? '' : 'disabled' ?>></textarea>
+                                    <textarea name="comentario_revision[<?= $idFormulario ?>]" placeholder="Opcional..." <?= ($puedeEditarRevision || $puedeGuardarErrores) ? '' : 'disabled' ?>></textarea>
                                 </div>
                             </div>
                         </div>
@@ -185,7 +185,7 @@ function columnasAnalisisRevision(array $tabla): array
                                                         <?php foreach ($columnasAnalisis as $columna): ?>
                                                             <?php $valor = $fila[$columna] ?? ''; ?>
                                                             <td>
-                                                                <?php if ($pk !== null && $puedeAprobarRevision && in_array($columna, $editables, true)): ?>
+                                                                <?php if ($pk !== null && $puedeEditarRevision && in_array($columna, $editables, true)): ?>
                                                                     <input
                                                                         type="<?= inputTypeRevision($valor) ?>"
                                                                         name="datos[<?= $idFormulario ?>][<?= eRevision($tabla['tabla']) ?>][<?= eRevision($idFila) ?>][<?= eRevision($columna) ?>]"
@@ -219,11 +219,17 @@ function columnasAnalisisRevision(array $tabla): array
                 </div>
             <?php endforeach; ?>
 
-            <?php if ($puedeAprobarRevision): ?>
+            <?php if ($puedeGuardarErrores || $puedeGuardarCorreccion || $puedeAprobarRevision): ?>
                 <div class="revision-actions">
-                    <button class="btn-submit secondary" type="submit" name="accion" value="marcar_error">Guardar con errores</button>
-                    <button class="btn-submit secondary" type="submit" name="accion" value="guardar">Guardar correccion</button>
-                    <button class="btn-submit" type="submit" name="accion" value="aprobar">Aprobar formulario</button>
+                    <?php if ($puedeGuardarErrores): ?>
+                        <button class="btn-submit secondary" type="submit" name="accion" value="marcar_error">Guardar con errores</button>
+                    <?php endif; ?>
+                    <?php if ($puedeGuardarCorreccion): ?>
+                        <button class="btn-submit secondary" type="submit" name="accion" value="guardar">Guardar correccion</button>
+                    <?php endif; ?>
+                    <?php if ($puedeAprobarRevision): ?>
+                        <button class="btn-submit" type="submit" name="accion" value="aprobar">Aprobar formulario</button>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </form>

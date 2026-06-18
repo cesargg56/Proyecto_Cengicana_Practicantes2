@@ -3,6 +3,16 @@ require_once __DIR__ . '/../includes/auth.php';
 
 lab_require_module_access();
 
+if (!lab_can_any([
+    'laboratorio.labc.ver',
+    'laboratorio.formularios_labc.ver',
+    'laboratorio.analisis.ver',
+    'laboratorio.blanco_control.ver',
+    'laboratorio.consolidacion.ver',
+])) {
+    lab_forbidden('No tiene permisos para acceder al LABC.');
+}
+
 function labc_e($value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');

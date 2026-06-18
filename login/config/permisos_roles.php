@@ -62,6 +62,17 @@ function sembrar_permisos_base(PDO $conn)
         'ver_reportes_cengi' => 'Permite ver y generar reportes de Cengicursos',
         'gestionar_notas_cengi' => 'Permite registrar asistencia, evaluaciones y diplomas en cursos',
         'subir_diplomas_cengi' => 'Permite subir y actualizar diplomas en cursos',
+        'laboratorio.solicitudes.crear' => 'Permite ingresar un nuevo analisis en Laboratorio',
+        'laboratorio.lotes.ver' => 'Permite visualizar lotes en Laboratorio',
+        'laboratorio.labc.ver' => 'Permite ver el panel LABC de Laboratorio',
+        'laboratorio.formularios_labc.ver' => 'Permite ver los formularios dentro del LABC',
+        'laboratorio.consolidacion.ver' => 'Permite ver la vista de consolidacion de Laboratorio',
+        'laboratorio.formularios_pendientes.ver' => 'Permite ver formularios pendientes de Laboratorio',
+        'laboratorio.formularios_erroneos.ver' => 'Permite ver formularios erroneos de Laboratorio',
+        'laboratorio.blanco_control.ver' => 'Permite ver blancos y controles dentro del LABC',
+        'laboratorio.consolidacion.aprobar' => 'Permite aprobar formularios de Laboratorio',
+        'laboratorio.formularios.guardar_corregidos' => 'Permite guardar formularios corregidos de Laboratorio',
+        'laboratorio.formularios.guardar_errores' => 'Permite guardar formularios con errores de Laboratorio',
     ];
 
     $stmt = $conn->prepare("
@@ -103,6 +114,7 @@ function agrupar_permisos(array $permisos)
     $grupos = [
         'Permisos de visitas' => [],
         'Permisos de cursos' => [],
+        'Permisos de laboratorio' => [],
         'Permisos de pagos' => [],
         'Permisos de usuarios y accesos' => [],
         'Permisos generales' => [],
@@ -121,6 +133,10 @@ function clasificar_grupo_permiso($nombrePermiso)
 
     if (strpos($nombre, 'curso') !== false || strpos($nombre, 'participante') !== false || strpos($nombre, 'asistencia') !== false || strpos($nombre, 'evaluacion') !== false || strpos($nombre, 'ingenio') !== false || strpos($nombre, 'cengi') !== false || strpos($nombre, 'nota') !== false) {
         return 'Permisos de cursos';
+    }
+
+    if (strpos($nombre, 'laboratorio.') === 0 || strpos($nombre, 'labc') !== false) {
+        return 'Permisos de laboratorio';
     }
 
     if (strpos($nombre, 'pago') !== false) {
@@ -143,6 +159,7 @@ function titulo_corto_grupo_permiso($grupo)
     $mapa = [
         'Permisos de visitas' => 'Visitas',
         'Permisos de cursos' => 'Cursos',
+        'Permisos de laboratorio' => 'Laboratorio',
         'Permisos de pagos' => 'Pagos',
         'Permisos de usuarios y accesos' => 'Usuarios y accesos',
         'Permisos generales' => 'Generales',
@@ -156,6 +173,7 @@ function descripcion_grupo_permiso($grupo)
     $mapa = [
         'Permisos de visitas' => 'Controla solicitudes, areas, correos y seguimiento del modulo de visitas.',
         'Permisos de cursos' => 'Agrupa acciones para cursos, participantes, notas, ingenios y asignaciones.',
+        'Permisos de laboratorio' => 'Controla el acceso a lotes, LABC, formularios, revision y controles de laboratorio.',
         'Permisos de pagos' => 'Reune permisos relacionados con estados de pago y control de cobros.',
         'Permisos de usuarios y accesos' => 'Incluye gestion de usuarios, roles, modulos y acceso administrativo.',
         'Permisos generales' => 'Permisos transversales que no pertenecen a un solo modulo.',
@@ -197,6 +215,17 @@ function etiqueta_permiso($nombrePermiso)
         'ver_reportes_cengi' => 'Ver reportes de cursos',
         'gestionar_notas_cengi' => 'Gestionar notas y diplomas',
         'subir_diplomas_cengi' => 'Subir diplomas',
+        'laboratorio.solicitudes.crear' => 'Ingresar nuevo analisis',
+        'laboratorio.lotes.ver' => 'Visualizar lotes',
+        'laboratorio.labc.ver' => 'LABC',
+        'laboratorio.formularios_labc.ver' => 'Ver formularios en LABC',
+        'laboratorio.consolidacion.ver' => 'Ver vista',
+        'laboratorio.formularios_pendientes.ver' => 'Ver formularios pendientes',
+        'laboratorio.formularios_erroneos.ver' => 'Ver formularios erroneos',
+        'laboratorio.blanco_control.ver' => 'Ver blancos y controles',
+        'laboratorio.consolidacion.aprobar' => 'Aprobar formularios',
+        'laboratorio.formularios.guardar_corregidos' => 'Guardar formularios corregidos',
+        'laboratorio.formularios.guardar_errores' => 'Guardar formulario con errores',
     ];
 
     if (isset($mapa[$nombrePermiso])) {

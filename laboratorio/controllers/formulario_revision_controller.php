@@ -5,7 +5,11 @@ require_once __DIR__ . '/../models/formulario_revision_model.php';
 
 lab_require_module_access();
 
-if (!lab_can_view_error_forms()) {
+if (!lab_can_view_error_forms() && !lab_can_any([
+    'laboratorio.consolidacion.aprobar',
+    'laboratorio.formularios.guardar_corregidos',
+    'laboratorio.formularios.guardar_errores',
+])) {
     lab_forbidden('No tiene permisos para ver esta revision.');
 }
 
@@ -22,8 +26,18 @@ $usuarioActual = lab_current_user();
 $usuarioRevision = (string) ($usuarioActual['nombre'] ?? $usuarioActual['correo'] ?? 'Usuario');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    lab_require_permission('laboratorio.consolidacion.aprobar');
     $accion = (string) ($_POST['accion'] ?? '');
+
+    $permisosAccion = [
+        'guardar' => 'laboratorio.formularios.guardar_corregidos',
+        'marcar_error' => 'laboratorio.formularios.guardar_errores',
+        'aprobar' => 'laboratorio.consolidacion.aprobar',
+    ];
+
+    if (!isset($permisosAccion[$accion]) || !lab_can($permisosAccion[$accion])) {
+        lab_forbidden('No tiene permisos para completar esta accion.');
+    }
+
     $comentarioRaw = $_POST['comentario_revision'] ?? '';
     if (is_array($comentarioRaw)) {
         $comentarios = [];
@@ -68,6 +82,9 @@ if (!$resumenRango) {
 
 $formulariosRevision = obtenerFormulariosRevisionRango((int) $idRango);
 $puedeAprobarRevision = lab_can('laboratorio.consolidacion.aprobar');
+$puedeGuardarCorreccion = lab_can('laboratorio.formularios.guardar_corregidos');
+$puedeGuardarErrores = lab_can('laboratorio.formularios.guardar_errores');
+$puedeEditarRevision = $puedeAprobarRevision || $puedeGuardarCorreccion;
 
 require_once __DIR__ . '/../view/formulario_revision_view.php';
 
