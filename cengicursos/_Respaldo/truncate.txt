@@ -1,0 +1,10 @@
+SET FOREIGN_KEY_CHECKS=0;
+TRUNCATE cengi_cursos.`asignaciones`;
+TRUNCATE cengi_cursos.`asignaciones_import`;
+TRUNCATE cengi_cursos.`asistencia`;
+TRUNCATE cengi_cursos.participantes;
+TRUNCATE cengi_cursos.`categorias_cursos`;
+TRUNCATE cengi_cursos.`cursos`;
+TRUNCATE cengi_cursos.ingenios;
+TRUNCATE cengi_cursos.`participantes_import`;
+SET FOREIGN_KEY_CHECKS=1;

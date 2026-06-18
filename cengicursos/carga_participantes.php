@@ -1,0 +1,291 @@
+<?php
+session_start();
+
+require_once "revisar_permisos.php";
+require_once "conexion.php";
+require_once "menu.php";
+require_once __DIR__ . "/classes/PHPExcel.php";
+require_once __DIR__ . "/classes/PHPExcel/IOFactory.php";
+
+cengi_require_admin("participantes.php");
+
+$db = conectar();
+$ingenioID = (int) ($_POST['ingenio'] ?? 0);
+$userID = (int) ($_POST['user'] ?? 0);
+$cursoID = (int) ($_POST['curso'] ?? 0);
+
+function cengi_carga_error($mensaje)
+{
+    throw new RuntimeException($mensaje);
+}
+
+function cengi_valor_excel($valor)
+{
+    if ($valor === null) {
+        return '';
+    }
+
+    if (is_float($valor) || is_int($valor)) {
+        return trim((string) $valor);
+    }
+
+    return trim((string) $valor);
+}
+
+function cengi_obtener_filas_archivo($archivoTemporal, $extension)
+{
+    $filas = [];
+
+    if ($extension === 'csv') {
+        $handle = fopen($archivoTemporal, 'r');
+        if ($handle === false) {
+            cengi_carga_error('No fue posible abrir el archivo CSV.');
+        }
+
+        while (($data = fgetcsv($handle, 0, ',')) !== false) {
+            $filas[] = $data;
+        }
+
+        fclose($handle);
+        return $filas;
+    }
+
+    $libro = PHPExcel_IOFactory::load($archivoTemporal);
+    $hoja = $libro->getActiveSheet();
+    $maxFila = $hoja->getHighestRow();
+
+    for ($fila = 1; $fila <= $maxFila; $fila++) {
+        $filas[] = [
+            cengi_valor_excel($hoja->getCellByColumnAndRow(0, $fila)->getCalculatedValue()),
+            cengi_valor_excel($hoja->getCellByColumnAndRow(1, $fila)->getCalculatedValue()),
+            cengi_valor_excel($hoja->getCellByColumnAndRow(2, $fila)->getCalculatedValue()),
+            cengi_valor_excel($hoja->getCellByColumnAndRow(3, $fila)->getCalculatedValue()),
+        ];
+    }
+
+    return $filas;
+}
+
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Carga de participantes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.css">
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</head>
+<body>
+    <?php menu_render(); ?>
+    <div class="container">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">Resultado de la carga</h3>
+            </div>
+            <div class="panel-body">
+<?php
+try {
+    if (
+        $ingenioID <= 0 ||
+        $userID <= 0 ||
+        $cursoID <= 0
+    ) {
+        cengi_carga_error('Debes seleccionar ingenio, usuario y curso antes de cargar el archivo.');
+    }
+
+    if (
+        !isset($_FILES['archivo']) ||
+        !is_uploaded_file($_FILES['archivo']['tmp_name'])
+    ) {
+        cengi_carga_error('No se recibio ningun archivo.');
+    }
+
+    $nombreArchivo = $_FILES['archivo']['name'] ?? '';
+    $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
+    $permitidas = ['csv', 'xls', 'xlsx'];
+
+    if (!in_array($extension, $permitidas, true)) {
+        cengi_carga_error('Solo se permiten archivos CSV, XLS o XLSX.');
+    }
+
+    $filas = cengi_obtener_filas_archivo($_FILES['archivo']['tmp_name'], $extension);
+
+    if (count($filas) <= 1) {
+        cengi_carga_error('El archivo no contiene datos para importar.');
+    }
+
+    $stmtBuscarParticipante = $db->prepare("
+        SELECT id
+        FROM participantes
+        WHERE cui_participantes = ?
+        LIMIT 1
+    ");
+
+    $stmtInsertParticipante = $db->prepare("
+        INSERT INTO participantes (
+            ingenio_id,
+            usuarios_id,
+            cui_participantes,
+            nombre_participantes,
+            puesto_participantes,
+            area_participantes,
+            estado_participantes,
+            creado
+        )
+        VALUES (?, ?, ?, ?, ?, ?, 1, NOW())
+        RETURNING id
+    ");
+
+    $stmtActualizarParticipante = $db->prepare("
+        UPDATE participantes
+        SET
+            ingenio_id = ?,
+            usuarios_id = ?,
+            nombre_participantes = ?,
+            puesto_participantes = ?,
+            area_participantes = ?,
+            actualizado = NOW()
+        WHERE id = ?
+    ");
+
+    $stmtBuscarAsignacion = $db->prepare("
+        SELECT id
+        FROM asignaciones
+        WHERE participantes_id = ?
+          AND cursos_id = ?
+        LIMIT 1
+    ");
+
+    $stmtInsertAsignacion = $db->prepare("
+        INSERT INTO asignaciones (
+            participantes_id,
+            usuarios_id,
+            cursos_id,
+            estado_asignaciones,
+            creado
+        )
+        VALUES (?, ?, ?, 1, NOW())
+    ");
+
+    $stmtActualizarAsignacion = $db->prepare("
+        UPDATE asignaciones
+        SET
+            usuarios_id = ?,
+            estado_asignaciones = 1,
+            actualizado = NOW()
+        WHERE id = ?
+    ");
+
+    $procesados = 0;
+    $creados = 0;
+    $actualizados = 0;
+    $asignados = 0;
+    $advertencias = [];
+
+    $db->beginTransaction();
+
+    foreach ($filas as $indice => $fila) {
+        if ($indice === 0) {
+            continue;
+        }
+
+        $cui = trim((string) ($fila[0] ?? ''));
+        $nombre = trim((string) ($fila[1] ?? ''));
+        $puesto = trim((string) ($fila[2] ?? ''));
+        $area = trim((string) ($fila[3] ?? ''));
+        $lineaReal = $indice + 1;
+
+        if ($cui === '' && $nombre === '' && $puesto === '' && $area === '') {
+            continue;
+        }
+
+        if ($cui === '' || $nombre === '') {
+            $advertencias[] = "Linea {$lineaReal}: se omitio porque faltan CUI o nombre.";
+            continue;
+        }
+
+        $stmtBuscarParticipante->execute([$cui]);
+        $participanteID = $stmtBuscarParticipante->fetchColumn();
+
+        if ($participanteID) {
+            $stmtActualizarParticipante->execute([
+                $ingenioID,
+                $userID,
+                $nombre,
+                $puesto,
+                $area,
+                $participanteID,
+            ]);
+            $actualizados++;
+        } else {
+            $stmtInsertParticipante->execute([
+                $ingenioID,
+                $userID,
+                $cui,
+                $nombre,
+                $puesto,
+                $area,
+            ]);
+            $participanteID = $stmtInsertParticipante->fetchColumn();
+            $creados++;
+        }
+
+        $stmtBuscarAsignacion->execute([
+            $participanteID,
+            $cursoID,
+        ]);
+        $asignacionID = $stmtBuscarAsignacion->fetchColumn();
+
+        if ($asignacionID) {
+            $stmtActualizarAsignacion->execute([
+                $userID,
+                $asignacionID,
+            ]);
+        } else {
+            $stmtInsertAsignacion->execute([
+                $participanteID,
+                $userID,
+                $cursoID,
+            ]);
+            $asignados++;
+        }
+
+        $procesados++;
+    }
+
+    $db->commit();
+    ?>
+                <div class="alert alert-success">
+                    <strong>Carga completada.</strong>
+                    Se procesaron <?php echo $procesados; ?> filas, se crearon <?php echo $creados; ?> participantes, se actualizaron <?php echo $actualizados; ?> y se generaron <?php echo $asignados; ?> asignaciones nuevas.
+                </div>
+    <?php if ($advertencias): ?>
+                <div class="alert alert-warning">
+                    <strong>Advertencias:</strong>
+                    <ul class="mb-0">
+                        <?php foreach ($advertencias as $advertencia) { ?>
+                            <li><?php echo htmlspecialchars($advertencia); ?></li>
+                        <?php } ?>
+                    </ul>
+                </div>
+    <?php endif; ?>
+<?php
+} catch (Throwable $e) {
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    ?>
+                <div class="alert alert-danger">
+                    <strong>No se pudo completar la carga.</strong>
+                    <?php echo htmlspecialchars($e->getMessage()); ?>
+                </div>
+<?php } ?>
+                <a href="participantes.php" class="btn btn-success">Regresar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

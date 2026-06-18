@@ -1,0 +1,16 @@
+{
+    "name": "jeshu/login_cengi",
+    "autoload": {
+        "psr-4": {
+            "Jeshu\\LoginCengi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "yo"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
+}

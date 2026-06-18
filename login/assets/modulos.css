@@ -1,0 +1,211 @@
+/* ===== VARIABLES ===== */
+:root {
+  --verde-principal: #73BC25;
+  --verde-tec: #A3D300;
+  --rojo: #e74c3c;
+  --rojo-hover: #c0392b;
+  --gris: #CED2D5;
+  --fondo: #f4f6f7;
+  --texto: #2b2b2b;
+}
+
+/* ===== BASE ===== */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  padding: 30px;
+}
+
+/* ===== TITULO ===== */
+h2 {
+  color: var(--verde-principal);
+  margin-bottom: 15px;
+}
+
+/* ===== BOTÓN CREAR ===== */
+.btn-crear {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--verde-principal), var(--verde-tec));
+  color: white;
+  border-radius: 10px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.25s;
+}
+
+.btn-crear:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(115,188,37,0.4);
+}
+
+/* ===== TABLA ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+th {
+  background: var(--verde-principal);
+  color: white;
+  padding: 14px;
+  text-align: left;
+  font-size: 14px;
+}
+
+/* FILAS */
+td {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+/* HOVER FILAS */
+tr:hover {
+  background: #f7fbf3;
+}
+
+/* ===== BOTONES ===== */
+.btn-edit,
+.btn-delete {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+/* EDITAR */
+.btn-edit {
+  background: var(--verde-tec);
+  color: #1a1a1a;
+}
+
+.btn-edit:hover {
+  transform: scale(1.05);
+}
+
+/* ELIMINAR */
+.btn-delete {
+  background: var(--rojo);
+  color: white;
+}
+
+.btn-delete:hover {
+  background: var(--rojo-hover);
+  transform: scale(1.05);
+}
+
+/* ===== BOTÓN VOLVER ===== */
+.btn-volver {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: var(--gris);
+  border-radius: 8px;
+  color: #333;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.btn-volver:hover {
+  background: var(--verde-tec);
+}
+
+/* ===== MODAL ===== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  z-index: 9999;
+}
+
+.modal.active {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CAJA */
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 18px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  animation: popup 0.25s ease;
+}
+
+/* TEXTO */
+.modal-content h3 {
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.modal-content p {
+  color: #666;
+  font-size: 14px;
+}
+
+/* ANIMACIÓN */
+@keyframes popup {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* BOTONES MODAL */
+.modal-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+/* CANCELAR */
+.modal-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-buttons button:hover {
+  background: #bbb;
+}
+
+/* ELIMINAR */
+.modal-buttons a {
+  flex: 1;
+  padding: 10px;
+  background: var(--rojo);
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.modal-buttons a:hover {
+  background: var(--rojo-hover);
+}

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemadesigner version="6.5">
+<source>
+<database charset="utf8" collation="utf8_general_ci">sistema_bancario</database>
+</source>
+<canvas zoom="100">
+<tables>
+<table name="tbl_clientes" view="colnames">
+<left>18</left>
+<top>256</top>
+<width>105</width>
+<height>180</height>
+<sql_create_table>CREATE TABLE `tbl_clientes` (
+  `id_clientes` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL,
+  `direccion` varchar(50) NOT NULL,
+  `telefono` varchar(50) NOT NULL,
+  `dpi` varchar(30) NOT NULL,
+  `estado` int(11) NOT NULL,
+  PRIMARY KEY (`id_clientes`),
+  UNIQUE KEY `index_dpi` (`dpi`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8</sql_create_table>
+</table>
+<table name="tbl_cuentas" view="colnames">
+<left>596</left>
+<top>226</top>
+<width>112</width>
+<height>163</height>
+<sql_create_table>CREATE TABLE `tbl_cuentas` (
+  `id_cuenta` int(11) NOT NULL AUTO_INCREMENT,
+  `no_cuenta` varchar(50) NOT NULL,
+  `estado` varchar(15) NOT NULL,
+  `tipo_cuenta` varchar(20) NOT NULL,
+  `id_clientes` int(11) NOT NULL,
+  PRIMARY KEY (`id_cuenta`),
+  KEY `FK_tbl_cuentas` (`id_clientes`),
+  CONSTRAINT `FK_tbl_cuentas` FOREIGN KEY (`id_clientes`) REFERENCES `tbl_clientes` (`id_clientes`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8</sql_create_table>
+</table>
+<table name="tbl_solicitudes" view="colnames">
+<left>795</left>
+<top>7</top>
+<width>130</width>
+<height>180</height>
+<sql_create_table>CREATE TABLE `tbl_solicitudes` (
+  `id_solicitud` int(11) NOT NULL AUTO_INCREMENT,
+  `servicio` varchar(50) NOT NULL,
+  `fecha_solicitud` datetime NOT NULL,
+  `fecha_entrega` datetime NOT NULL,
+  `estado` varchar(20) NOT NULL,
+  `id_cuenta` int(11) NOT NULL,
+  PRIMARY KEY (`id_solicitud`),
+  KEY `FK_tbl_solicitudes` (`id_cuenta`),
+  CONSTRAINT `FK_tbl_solicitudes` FOREIGN KEY (`id_cuenta`) REFERENCES `tbl_cuentas` (`id_cuenta`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8</sql_create_table>
+</table>
+<table name="tbl_transacciones" view="colnames">
+<left>836</left>
+<top>240</top>
+<width>149</width>
+<height>163</height>
+<sql_create_table>CREATE TABLE `tbl_transacciones` (
+  `id_transaccion` int(11) NOT NULL AUTO_INCREMENT,
+  `fecha_transaccion` datetime NOT NULL,
+  `tipo_transaccion` varchar(20) NOT NULL,
+  `cantidad` decimal(8,2) NOT NULL,
+  `id_cuenta` int(11) NOT NULL,
+  PRIMARY KEY (`id_transaccion`),
+  KEY `FK_tbl_transacciones` (`id_cuenta`),
+  CONSTRAINT `FK_tbl_transacciones` FOREIGN KEY (`id_cuenta`) REFERENCES `tbl_cuentas` (`id_cuenta`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8</sql_create_table>
+</table>
+<table name="tbl_solicitud_prestamo" view="colnames">
+<left>137</left>
+<top>29</top>
+<width>170</width>
+<height>180</height>
+<sql_create_table>CREATE TABLE `tbl_solicitud_prestamo` (
+  `id_solicitud_prestamo` int(11) NOT NULL AUTO_INCREMENT,
+  `cantidad` decimal(8,2) NOT NULL,
+  `plazo` varchar(20) NOT NULL,
+  `fecha_solicitud` datetime NOT NULL,
+  `estado` int(2) NOT NULL,
+  `id_clientes` int(11) NOT NULL,
+  PRIMARY KEY (`id_solicitud_prestamo`),
+  KEY `FK_tbl_solicitud_prestamo` (`id_clientes`),
+  CONSTRAINT `FK_tbl_solicitud_prestamo` FOREIGN KEY (`id_clientes`) REFERENCES `tbl_clientes` (`id_clientes`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8</sql_create_table>
+</table>
+<table name="tbl_creditos" view="colnames">
+<left>351</left>
+<top>17</top>
+<width>170</width>
+<height>163</height>
+<sql_create_table>CREATE TABLE `tbl_creditos` (
+  `id_creditos` int(11) NOT NULL AUTO_INCREMENT,
+  `saldo` decimal(8,2) NOT NULL,
+  `estado` int(2) NOT NULL,
+  `id_solicitud_prestamo` int(11) NOT NULL,
+  `id_cuenta` int(11) NOT NULL,
+  PRIMARY KEY (`id_creditos`),
+  KEY `FK_tbl_prestamos` (`id_cuenta`),
+  KEY `FK_tbl_creditos` (`id_solicitud_prestamo`),
+  CONSTRAINT `FK_tbl_creditos` FOREIGN KEY (`id_solicitud_prestamo`) REFERENCES `tbl_solicitud_prestamo` (`id_solicitud_prestamo`),
+  CONSTRAINT `FK_tbl_prestamos` FOREIGN KEY (`id_cuenta`) REFERENCES `tbl_cuentas` (`id_cuenta`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8</sql_create_table>
+</table>
+</tables>
+</canvas>
+</schemadesigner>

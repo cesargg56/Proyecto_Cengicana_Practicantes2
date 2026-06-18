@@ -1,0 +1,424 @@
+<?php
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../includes/solicitud_formulario_helpers.php';
+
+lab_require_module_access();
+asegurarColumnasFirmasSolicitud($conexion);
+
+$message = '';
+$dbWarning = '';
+$solicitudesDb = [];
+$correlativosDb = [];
+$loteSeleccionado = trim((string) ($_GET['lote'] ?? ''));
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $idSolicitudPost = !empty($_POST['id_solicitud']) ? (int) $_POST['id_solicitud'] : null;
+  lab_require_permission($idSolicitudPost ? 'laboratorio.solicitudes.editar' : 'laboratorio.solicitudes.crear');
+
+  try {
+    $conexion->beginTransaction();
+
+    $tipoFormulario = $_POST['tipo_form'] ?? 'suelos';
+    $tipoMuestra = obtenerTipoMuestra($conexion, $tipoFormulario);
+    $codigoMuestreo = '';
+    $codigoLote = trim($_POST['lote'] ?? '');
+    $fechaMuestreo = $_POST['fecha_de_muestreo'] ?? null;
+    $numeroMuestras = max(1, (int) ($_POST['numero_muestras'] ?? 1));
+    $fechaEstimada = $_POST['fecha_estimada'] ?? null;
+    $observaciones = trim($_POST['observaciones'] ?? '');
+    $ingresadoPor = trim($_POST['ingresado_por'] ?? '');
+    $correoIngresado = trim($_POST['correo_ingresado_por'] ?? '');
+    $recibidoPor = trim($_POST['recibido_por'] ?? '');
+    $correoRecibido = trim($_POST['correo_recibido_por'] ?? '');
+    $firmaIngreso = normalizarFirmaSolicitud($_POST['firma_ingreso'] ?? '');
+    $firmaRecibe = normalizarFirmaSolicitud($_POST['firma_recibe'] ?? '');
+    $analisisSeleccionados = $_POST['analisis'] ?? [];
+    $idSolicitud = $idSolicitudPost;
+
+    if ($codigoLote === '') {
+      throw new RuntimeException('Ingrese o seleccione un número de lote.');
+    }
+
+    if (!$fechaMuestreo) {
+      throw new RuntimeException('Ingrese la fecha de muestreo.');
+    }
+
+    $idLote = obtenerLote($conexion, $codigoLote);
+    $paramsSolicitud = [
+      $tipoMuestra['id_tipo'],
+      $idLote,
+      $codigoMuestreo,
+      $fechaMuestreo,
+      $numeroMuestras,
+      $ingresadoPor,
+      $correoIngresado,
+      $recibidoPor,
+      $correoRecibido,
+      date('Y-m-d'),
+      $fechaEstimada ?: null,
+      $observaciones,
+      $firmaIngreso,
+      $firmaRecibe,
+    ];
+
+    if ($idSolicitud) {
+      $updateSolicitud = $conexion->prepare("
+        UPDATE solicitud
+        SET id_tipo = ?, id_lote = ?, codigo_muestreo = ?, fecha_muestreo = ?, numero_muestras = ?,
+            ingresado_por = ?, correo_ingresado = ?, recibido_por = ?, correo_recibido = ?,
+            fecha_ingreso = ?, fecha_estimada = ?, observaciones = ?,
+            firma_ingreso = COALESCE(NULLIF(?, ''), firma_ingreso),
+            firma_recibe = COALESCE(NULLIF(?, ''), firma_recibe)
+        WHERE id_solicitud = ?
+      ");
+      $paramsActualizar = array_merge($paramsSolicitud, [$idSolicitud]);
+      $updateSolicitud->execute($paramsActualizar);
+    } else {
+      $insertSolicitud = $conexion->prepare("
+        INSERT INTO solicitud (
+          id_tipo, id_lote, codigo_muestreo, fecha_muestreo, numero_muestras,
+          ingresado_por, correo_ingresado, recibido_por, correo_recibido,
+          fecha_ingreso, fecha_estimada, observaciones, firma_ingreso, firma_recibe
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ");
+      $insertSolicitud->execute($paramsSolicitud);
+      $idSolicitud = (int) $conexion->lastInsertId();
+    }
+
+    $inicioExistente = obtenerInicioLaboratorioSolicitud($conexion, $idSolicitud);
+    $loteInicial = $inicioExistente ?: obtenerInicioLaboratorioNuevo($conexion, $tipoMuestra['prefijo'], $tipoMuestra['nombre'], $numeroMuestras);
+    $longitudLote = max(3, strlen((string) $loteInicial));
+    $loteFinal = $loteInicial + $numeroMuestras - 1;
+    if ($inicioExistente) {
+      sincronizarCorrelativo($conexion, $tipoMuestra['prefijo'], $loteFinal);
+    }
+    $mesAnio = mesAnioDesdeFecha($fechaMuestreo);
+    $codigoInicio = construirCodigoLab($tipoMuestra['prefijo'], $loteInicial, $mesAnio, $longitudLote);
+    $codigoFin = construirCodigoLab($tipoMuestra['prefijo'], $loteFinal, $mesAnio, $longitudLote);
+
+    $conexion->prepare("DELETE FROM muestra WHERE id_solicitud = ?")->execute([$idSolicitud]);
+    $insertMuestra = $conexion->prepare("INSERT INTO muestra (id_solicitud, numero_muestra, codigo_lab) VALUES (?, ?, ?)");
+
+    for ($i = 0; $i < $numeroMuestras; $i++) {
+      $numeroLaboratorio = $loteInicial + $i;
+      $codigoLab = construirCodigoLab($tipoMuestra['prefijo'], $numeroLaboratorio, $mesAnio, $longitudLote);
+      $insertMuestra->execute([$idSolicitud, $numeroLaboratorio, $codigoLab]);
+    }
+
+    $idRango = obtenerRango($conexion, $idLote, $loteInicial, $loteFinal);
+
+    $conexion->prepare("DELETE FROM solicitud_analisis WHERE id_solicitud = ?")->execute([$idSolicitud]);
+    $insertSolicitudAnalisis = $conexion->prepare("INSERT INTO solicitud_analisis (id_solicitud, id_tipo_analisis) VALUES (?, ?)");
+
+    foreach ($analisisSeleccionados as $nombreAnalisis) {
+      $nombreAnalisis = trim($nombreAnalisis);
+      if ($nombreAnalisis === '') continue;
+
+      $idTipoAnalisis = obtenerTipoAnalisis($conexion, $tipoMuestra['id_tipo'], $nombreAnalisis);
+      $insertSolicitudAnalisis->execute([$idSolicitud, $idTipoAnalisis]);
+      insertarLoteAnalisis($conexion, $idRango, $idTipoAnalisis);
+    }
+
+    $conexion->commit();
+    $message = "Solicitud #{$idSolicitud} guardada. Número de laboratorio: {$codigoInicio} a {$codigoFin}.";
+  } catch (Exception $e) {
+    if ($conexion->inTransaction()) {
+      $conexion->rollBack();
+    }
+    $message = 'Error al guardar la solicitud: ' . $e->getMessage();
+  }
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  lab_require_permission('laboratorio.solicitudes.crear');
+}
+
+try {
+  sincronizarCorrelativosConMuestras($conexion);
+
+  $stmtCorrelativos = $conexion->query("
+    SELECT tipo_muestra, prefijo, ultimo_numero
+    FROM correlativo_envio_solicitud
+  ");
+  $correlativosDb = $stmtCorrelativos->fetchAll();
+
+  $sqlSolicitudes = "
+    SELECT
+      s.id_solicitud,
+      s.codigo_muestreo,
+      s.fecha_muestreo,
+      s.numero_muestras,
+      l.codigo_lote,
+      tm.nombre AS tipo_nombre,
+      tm.prefijo,
+      mr.inicio_laboratorio,
+      mr.fin_laboratorio
+    FROM solicitud s
+    LEFT JOIN lote l ON l.id_lote = s.id_lote
+    LEFT JOIN tipo_muestra tm ON tm.id_tipo = s.id_tipo
+    LEFT JOIN (
+      SELECT
+        id_solicitud,
+        MIN(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo_lab, '-', 2), '-', -1) AS UNSIGNED)) AS inicio_laboratorio,
+        MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo_lab, '-', 2), '-', -1) AS UNSIGNED)) AS fin_laboratorio
+      FROM muestra
+      WHERE codigo_lab IS NOT NULL AND codigo_lab <> ''
+      GROUP BY id_solicitud
+    ) mr ON mr.id_solicitud = s.id_solicitud
+    ORDER BY s.id_solicitud DESC
+    LIMIT 100
+  ";
+
+  $stmtSolicitudes = $conexion->query($sqlSolicitudes);
+  $solicitudesDb = $stmtSolicitudes->fetchAll();
+} catch (Exception $e) {
+  $dbWarning = 'No se pudieron cargar las solicitudes desde la base de datos: ' . $e->getMessage();
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Laboratorios AgroLab — Boleta de Solicitud</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+</head>
+<body>
+   <link rel="stylesheet" href="../css/solicitud_formulario.css?v=4">
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Laboratorios AgroLab</div>
+  <div class="nav-links">
+    <a class="nav-link back" href="../index.php" title="Volver al inicio">Inicio</a>
+    <a class="nav-link back" href="../index.php" title="Volver al menu principal">Cambiar de Formulario</a>
+    <a class="nav-link active" href="#">Análisis Nuevos</a>
+  </div>
+  <div class="nav-icons">
+    <span class="material-symbols-outlined" title="Notificaciones">notifications</span>
+    <span class="material-symbols-outlined" title="Configuración">settings</span>
+    <span class="material-symbols-outlined" title="Cuenta">account_circle</span>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <?php if (!empty($message)): ?>
+    <div style="padding:12px;margin-bottom:14px;border-radius:8px;background:#e9f7e7;border:1px solid #c7e5c8;color:#184d12">
+      <?php echo htmlspecialchars($message); ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (!empty($dbWarning)): ?>
+    <div style="padding:12px;margin-bottom:14px;border-radius:8px;background:#fff7e6;border:1px solid #f1d08a;color:#6b4600">
+      <?php echo htmlspecialchars($dbWarning); ?>
+    </div>
+  <?php endif; ?>
+
+  <form id="solicitud-form" method="post">
+  <input type="hidden" id="tipo_form" name="tipo_form" value="suelos"/>
+  <input type="hidden" id="firma_ingreso" name="firma_ingreso" value=""/>
+  <input type="hidden" id="firma_recibe" name="firma_recibe" value=""/>
+  <?php
+    $getTypes = $_GET['tipo'] ?? [];
+    if (!is_array($getTypes) && !empty($getTypes)) {
+        $getTypes = [$getTypes];
+    }
+    if (is_array($getTypes)) {
+        foreach ($getTypes as $t) {
+            echo '<input type="hidden" name="tipo[]" value="' . htmlspecialchars($t) . '"/>';
+        }
+    }
+  ?>
+
+  <!-- ENCABEZADO -->
+  <header class="doc-header">
+    <div class="doc-header-left">
+      <div class="logo-circle">
+        <span class="material-symbols-outlined">eco</span>
+      </div>
+      <div>
+        <div class="doc-title">Laboratorio Agroindustrial</div>
+        <div class="doc-subtitle">
+          Boleta de solicitud de análisis de <strong id="tipo-label-header">Suelos Físico</strong>
+        </div>
+      </div>
+    </div>
+    <div class="doc-header-right">
+      <div class="meta-badge"><span>VF</span> 005</div>
+      <div class="meta-badge">
+        <span>Lote</span>
+        <input class="lote-input" type="text" placeholder="Ej. 185" aria-label="Número de lote"/>
+      </div>
+    </div>
+  </header>
+
+  <!-- TIPO DE ANÁLISIS --->
+  <div class="tipo-btns" id="tipo-btns">
+    <button type="button" class="tipo-btn active" data-tipo="suelos">Suelos</button>
+    <button type="button" class="tipo-btn" data-tipo="foliares">Foliares</button>
+    <button type="button" class="tipo-btn" data-tipo="cana">Caña</button>
+    <button type="button" class="tipo-btn" data-tipo="miel">Miel</button>
+    <button type="button" class="tipo-btn" data-tipo="agua">Agua</button>
+  </div>
+<!-- DATOS DEL MUESTREO -->
+
+<div class="section-title">
+    Datos del muestreo
+</div>
+
+<div class="field-grid">
+    <div class="field">
+        <label for="lote">
+            Número de lote
+        </label>
+
+        <input
+            id="lote"
+            name="lote"
+            type="text"
+            placeholder="Ej. 185"
+            value="<?= htmlspecialchars($loteSeleccionado, ENT_QUOTES, 'UTF-8') ?>"/>
+    </div>
+
+    <div class="field">
+        <label for="fecha_muestreo">
+            Fecha de muestreo
+        </label>
+
+        <input
+            id="fecha_muestreo"
+            name="fecha_de_muestreo"
+            type="date"/>
+    </div>
+
+    <div class="field">
+        <label for="numero_muestras">
+            Número de muestras
+        </label>
+
+        <input
+            id="numero_muestras"
+            name="numero_muestras"
+            type="number"
+            placeholder="Ej. 7"/>
+    </div>
+
+    <div class="field">
+        <label for="n_laboratorio_inicio">
+            Número de laboratorio
+        </label>
+
+        <div class="laboratorio-range">
+            <input
+                id="n_laboratorio_inicio"
+                name="numero_laboratorio_inicio"
+                type="text"
+                placeholder="Ej. S-492-03-26"
+                readonly/>
+            <input
+                id="n_laboratorio_fin"
+                name="numero_laboratorio_fin"
+                type="text"
+                placeholder="Ej. S-498-03-26"
+                readonly/>
+        </div>
+        <input id="n_laboratorio" name="numero_laboratorio" type="hidden"/>
+    </div>
+</div>  <!-- ANÁLISIS SOLICITADOS -->
+  <div class="section-title">Análisis solicitados</div>
+  <div class="analisis-wrap">
+    <table class="analisis-table">
+      <thead>
+        <tr>
+          <th>Análisis</th>
+          <th class="center" style="width:110px">Tipo</th>
+          <th class="center" style="width:80px">Solicitar</th>
+        </tr>
+      </thead>
+      <tbody id="analisis-body"></tbody>
+    </table>
+  </div>
+
+  <!-- FIRMAS -->
+  <div class="section-title">Responsables y firmas</div>
+  <div class="firma-grid">
+    <div class="firma-card">
+      <span class="firma-label">Ingresado por</span>
+      <input class="firma-name-input" name="ingresado_por" type="text" placeholder="Nombre del analista" aria-label="Nombre del analista"/>
+      <input class="firma-email-input" name="correo_ingresado_por" type="email" placeholder="correo@ejemplo.com" aria-label="Correo del analista"/>
+      <canvas class="firma-canvas" id="canvas-ingreso" aria-label="Campo de firma — ingresado por"></canvas>
+      <div class="firma-actions">
+        <button type="button" class="btn-clear" data-clear-canvas="canvas-ingreso">
+          <span class="material-symbols-outlined">ink_eraser</span> Limpiar
+        </button>
+        <span class="firma-hint">Firme con el cursor o el dedo</span>
+      </div>
+    </div>
+    <div class="firma-card">
+      <span class="firma-label">Recibido por</span>
+      <input class="firma-name-input" name="recibido_por" type="text" placeholder="Nombre del receptor" aria-label="Nombre del receptor"/>
+      <input class="firma-email-input" name="correo_recibido_por" type="email" placeholder="correo@ejemplo.com" aria-label="Correo del receptor"/>
+      <canvas class="firma-canvas" id="canvas-recibe" aria-label="Campo de firma — recibido por"></canvas>
+      <div class="firma-actions">
+        <button type="button" class="btn-clear" data-clear-canvas="canvas-recibe">
+          <span class="material-symbols-outlined">ink_eraser</span> Limpiar
+        </button>
+        <span class="firma-hint">Firme con el cursor o el dedo</span>
+      </div>
+    </div>
+  </div>
+   <!-- OBSERVACIONES -->
+  <div class="section-title">Observaciones</div>
+  <div class="field">
+    <textarea id="observaciones" name="observaciones" rows="4"
+      placeholder="Detalles adicionales sobre las muestras o el envío..."></textarea>
+  </div>
+  <!-- FOOTER -->
+  <footer class="doc-footer">
+    <div class="footer-info">
+        <span class = "footer-title">AgroLab</span>
+      <span>
+        <span class="material-symbols-outlined">location_on</span>
+        Km 92.5 Carretera a 
+    </span>
+    <span>
+        <span class="material-symbols-outlined">call</span>
+            +50 &nbsp;|&nbsp; , C. A.
+        </span>
+    <span>
+        <span class="material-symbols-outlined">mail</span>
+            laboratoriocg@AgroLab.org &nbsp;|&nbsp; diaboratorio@AgroLab.org
+        </span>
+      <span class="footer-meta">Generado por TecnoBoris v2.1</span>
+    </div>
+  </footer>
+  </form>
+</main>
+<!-- FAB -->
+  <div class="fab-group">
+    <button type="button" class="fab secondary" id="btn-generar-pdf" title="Generar PDF">
+      <span class="fab-icon material-symbols-outlined">picture_as_pdf</span>
+      <span class="fab-text">
+        <span class="fab-label">Generar PDF</span>
+        <span class="fab-description">Descarga y envía el PDF</span>
+      </span>
+    </button>
+    <button type="button" class="fab primary" id="btn-finalizar-solicitud" title="Finalizar solicitud">
+      <span class="fab-icon material-symbols-outlined">send</span>
+      <span class="fab-text">
+        <span class="fab-label">Finalizar solicitud</span>
+        <span class="fab-description">Genera y envía antes de guardar</span>
+      </span>
+    </button>
+  </div>
+<script type="application/json" id="solicitudes-db"><?php echo json_encode($solicitudesDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
+<script type="application/json" id="correlativos-db"><?php echo json_encode($correlativosDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
+<script src="../node_modules/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="../js/solicitud_formulario.js?v=5"></script>
+</body>
+</html>

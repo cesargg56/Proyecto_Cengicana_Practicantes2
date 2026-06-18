@@ -1,0 +1,597 @@
+# Script Completo - Base de Datos `laboratorios_prueba`
+
+```sql
+CREATE DATABASE IF NOT EXISTS laboratorios_prueba;
+
+USE laboratorios_prueba;
+
+-- =====================================================
+-- TIPOS DE MUESTRA
+-- =====================================================
+
+CREATE TABLE tipo_muestra (
+    id_tipo INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255),
+    prefijo CHAR(1)
+);
+
+-- =====================================================
+-- LOTE Y SOLICITUD
+-- =====================================================
+
+CREATE TABLE lote (
+    id_lote INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_lote VARCHAR(255)
+);
+
+CREATE TABLE solicitud (
+    id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_tipo INT,
+    id_lote INT,
+
+    codigo_muestreo VARCHAR(255),
+    fecha_muestreo DATE,
+
+    numero_muestras INT,
+
+    institucion VARCHAR(255),
+    responsable_envio VARCHAR(255),
+
+    ingresado_por VARCHAR(255),
+    recibido_por VARCHAR(255),
+
+    fecha_ingreso DATE,
+    fecha_estimada DATE,
+
+    observaciones TEXT,
+
+    CONSTRAINT fk_solicitud_tipo
+        FOREIGN KEY (id_tipo)
+        REFERENCES tipo_muestra(id_tipo),
+
+    CONSTRAINT fk_solicitud_lote
+        FOREIGN KEY (id_lote)
+        REFERENCES lote(id_lote)
+);
+
+-- =====================================================
+-- MUESTRAS
+-- =====================================================
+
+CREATE TABLE muestra (
+    id_muestra INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_solicitud INT,
+
+    numero_muestra INT,
+    codigo_lab VARCHAR(255),
+
+    CONSTRAINT fk_muestra_solicitud
+        FOREIGN KEY (id_solicitud)
+        REFERENCES solicitud(id_solicitud)
+);
+
+-- =====================================================
+-- ANALISIS
+-- =====================================================
+
+CREATE TABLE tipo_analisis (
+    id_tipo INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_tipo_muestra INT,
+
+    nombre VARCHAR(255),
+
+    CONSTRAINT fk_tipo_analisis_tipo_muestra
+        FOREIGN KEY (id_tipo_muestra)
+        REFERENCES tipo_muestra(id_tipo)
+);
+
+CREATE TABLE solicitud_analisis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_solicitud INT,
+    id_tipo_analisis INT,
+
+    CONSTRAINT fk_sol_analisis_solicitud
+        FOREIGN KEY (id_solicitud)
+        REFERENCES solicitud(id_solicitud),
+
+    CONSTRAINT fk_sol_analisis_tipo
+        FOREIGN KEY (id_tipo_analisis)
+        REFERENCES tipo_analisis(id_tipo)
+);
+
+-- =====================================================
+-- RANGO Y CONTROL
+-- =====================================================
+
+CREATE TABLE lote_rango (
+    id_rango INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_lote INT,
+
+    inicio INT,
+    fin INT,
+
+    CONSTRAINT fk_lote_rango_lote
+        FOREIGN KEY (id_lote)
+        REFERENCES lote(id_lote)
+);
+
+CREATE TABLE lote_analisis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_rango INT,
+    id_tipo_analisis INT,
+
+    estado VARCHAR(255),
+
+    CONSTRAINT fk_lote_analisis_rango
+        FOREIGN KEY (id_rango)
+        REFERENCES lote_rango(id_rango),
+
+    CONSTRAINT fk_lote_analisis_tipo
+        FOREIGN KEY (id_tipo_analisis)
+        REFERENCES tipo_analisis(id_tipo)
+);
+
+-- =====================================================
+-- ESTADOS DEL FORMULARIO
+-- =====================================================
+
+CREATE TABLE estado_formulario (
+    id_estado INT AUTO_INCREMENT PRIMARY KEY,
+
+    nombre VARCHAR(255),
+    descripcion TEXT
+);
+
+-- =====================================================
+-- FORMULARIO BASE
+-- =====================================================
+
+CREATE TABLE formulario (
+    id_formulario INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_estado INT,
+    id_rango INT,
+    id_tipo_analisis INT,
+
+    fecha DATE,
+    analista VARCHAR(255),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_formulario_estado
+        FOREIGN KEY (id_estado)
+        REFERENCES estado_formulario(id_estado),
+
+    CONSTRAINT fk_formulario_rango
+        FOREIGN KEY (id_rango)
+        REFERENCES lote_rango(id_rango),
+
+    CONSTRAINT fk_formulario_tipo
+        FOREIGN KEY (id_tipo_analisis)
+        REFERENCES tipo_analisis(id_tipo)
+);
+
+-- =====================================================
+-- CURVAS CALIBRACION
+-- =====================================================
+
+CREATE TABLE curva_calibracion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_formulario INT,
+
+    concentracion DECIMAL(10,4),
+    absorbancia DECIMAL(10,4),
+
+    CONSTRAINT fk_curva_formulario
+        FOREIGN KEY (id_formulario)
+        REFERENCES formulario(id_formulario)
+);
+
+-- =====================================================
+-- BLANCOS Y CONTROL
+-- =====================================================
+
+CREATE TABLE blanco (
+    id_blanco INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_rango INT,
+    id_tipo_analisis INT,
+
+    codigo VARCHAR(255),
+    descripcion VARCHAR(255),
+
+    valor DECIMAL(10,4),
+
+    activo BOOLEAN,
+
+    CONSTRAINT fk_blanco_rango
+        FOREIGN KEY (id_rango)
+        REFERENCES lote_rango(id_rango),
+
+    CONSTRAINT fk_blanco_tipo
+        FOREIGN KEY (id_tipo_analisis)
+        REFERENCES tipo_analisis(id_tipo)
+);
+
+CREATE TABLE control_laboratorio (
+    id_control INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_rango INT,
+    id_tipo_analisis INT,
+
+    codigo VARCHAR(255),
+    descripcion VARCHAR(255),
+
+    valor DECIMAL(10,4),
+
+    minimo DECIMAL(10,4),
+    maximo DECIMAL(10,4),
+
+    activo BOOLEAN,
+
+    CONSTRAINT fk_control_rango
+        FOREIGN KEY (id_rango)
+        REFERENCES lote_rango(id_rango),
+
+    CONSTRAINT fk_control_tipo
+        FOREIGN KEY (id_tipo_analisis)
+        REFERENCES tipo_analisis(id_tipo)
+);
+
+-- =====================================================
+-- HISTORIAL DEL FORMULARIO
+-- =====================================================
+
+CREATE TABLE historial_formulario (
+    id_historial INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_formulario INT,
+
+    accion VARCHAR(255),
+
+    estado_anterior VARCHAR(255),
+    estado_nuevo VARCHAR(255),
+
+    usuario VARCHAR(255),
+
+    fecha DATETIME,
+
+    comentario TEXT,
+
+    CONSTRAINT fk_historial_formulario
+        FOREIGN KEY (id_formulario)
+        REFERENCES formulario(id_formulario)
+);
+
+-- =====================================================
+-- TIPOS DE ERROR
+-- =====================================================
+
+CREATE TABLE tipo_error (
+    id_error INT AUTO_INCREMENT PRIMARY KEY,
+
+    nombre VARCHAR(255),
+    descripcion TEXT,
+
+    severidad VARCHAR(255)
+);
+
+-- =====================================================
+-- ERRORES POR FORMULARIO
+-- =====================================================
+
+CREATE TABLE formulario_error (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_formulario INT,
+    id_error INT,
+
+    detectado_por VARCHAR(255),
+
+    fecha DATETIME,
+
+    activo BOOLEAN,
+
+    comentario TEXT,
+
+    CONSTRAINT fk_form_error_formulario
+        FOREIGN KEY (id_formulario)
+        REFERENCES formulario(id_formulario),
+
+    CONSTRAINT fk_form_error_tipo
+        FOREIGN KEY (id_error)
+        REFERENCES tipo_error(id_error)
+);
+
+-- =====================================================
+-- NUEVAS TABLAS AGREGADAS
+-- =====================================================
+
+CREATE TABLE MO_Porcentaje (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    fecha DATE,
+    no_lab VARCHAR(50),
+    peso_muestra DECIMAL(10,2),
+    sulfato_ferroso_consumido DECIMAL(10,2),
+    porcentaje_carbono_organico DECIMAL(10,4),
+    porcentaje_materia_organica DECIMAL(10,4),
+
+    m1_dicromato DECIMAL(10,4),
+    m2_dicromato DECIMAL(10,4),
+    val_solucion_ferroso DECIMAL(10,4),
+
+    normalidad_sulfato_ferroso DECIMAL(10,6),
+    ml_util_sulfato_ferroso1N DECIMAL(10,2),
+    dicromato_potasio DECIMAL(10,4),
+    dicromato_consumido DECIMAL(10,4),
+
+    blanco_sulfato_ferroso DECIMAL(10,2),
+    blanco_sulfato_ferroso_2 DECIMAL(10,2)
+);
+
+CREATE TABLE analisis_textura (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    no_lab VARCHAR(50),
+    fecha DATE,
+    porcentaje_hr DECIMAL(10,2),
+
+    lectura_1 DECIMAL(10,2),
+    temp_1 DECIMAL(10,2),
+    lectura_corregida_1 DECIMAL(10,2),
+
+    porcentaje_l_a DECIMAL(10,2),
+
+    lectura_2 DECIMAL(10,2),
+    temp_2 DECIMAL(10,2),
+    lectura_corregida_2 DECIMAL(10,2),
+
+    total DECIMAL(10,2),
+
+    porcentaje_arcilla DECIMAL(10,2),
+    porcentaje_limo DECIMAL(10,2),
+    porcentaje_arena DECIMAL(10,2),
+
+    textura VARCHAR(100)
+);
+
+CREATE TABLE laboratorio_humedad (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    no_lab VARCHAR(50) NOT NULL,
+    fecha DATE NOT NULL,
+
+    NoCaja INT NOT NULL,
+
+    PesoCaja DECIMAL(10,2) NOT NULL,
+    PesoCajaMHumeda DECIMAL(10,2) NOT NULL,
+    PesoCajaMseca DECIMAL(10,2) NOT NULL,
+
+    PesoSeco DECIMAL(10,2) NOT NULL,
+    PesoHumedo DECIMAL(10,2) NOT NULL,
+
+    PorHGrav DECIMAL(10,2) NOT NULL
+);
+
+-- =====================================================
+-- SUELOS
+-- =====================================================
+
+CREATE TABLE suelo_quimicos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    nitrogeno DECIMAL(10,4),
+    fosforo DECIMAL(10,4),
+    potasio DECIMAL(10,4),
+    calcio DECIMAL(10,4),
+    magnesio DECIMAL(10,4),
+    sodio DECIMAL(10,4),
+    azufre DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_ph_agua (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    ph DECIMAL(10,4),
+    temperatura DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_materia_organica (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    materia_organica DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_macros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    peso DECIMAL(10,4),
+    ppm_ca DECIMAL(10,4),
+    ppm_mg DECIMAL(10,4),
+    ppm_k DECIMAL(10,4),
+    ppm_na DECIMAL(10,4),
+    blk_ca DECIMAL(10,4),
+    blk_mg DECIMAL(10,4),
+    blk_k DECIMAL(10,4),
+    blk_na DECIMAL(10,4),
+    cic_blanco DECIMAL(10,4),
+    cic_muestra DECIMAL(10,4),
+    meq_ca DECIMAL(10,4),
+    meq_mg DECIMAL(10,4),
+    meq_k DECIMAL(10,4),
+    meq_na DECIMAL(10,4),
+    cic_meq DECIMAL(10,4),
+    control DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_fosforo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    blanco DECIMAL(10,4),
+    absorbancia DECIMAL(10,4),
+    ppm_solucion DECIMAL(10,4),
+    ppm_suelo DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_ce (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    lectura DECIMAL(10,4),
+    temperatura DECIMAL(10,4),
+    ce DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_dap (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    peso_caja DECIMAL(10,4),
+    peso_muestra_seca DECIMAL(10,4),
+    volumen_final DECIMAL(10,4),
+    peso_suelo_seco DECIMAL(10,4),
+    densidad DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_humedad (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    humedad DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE suelo_nitrogeno (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    peso DECIMAL(10,4),
+    hcl_blanco DECIMAL(10,4),
+    hcl_muestra DECIMAL(10,4),
+    porcentaje_n DECIMAL(10,4),
+    x_nitrogeno VARCHAR(255),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+-- =====================================================
+-- FOLIARES
+-- =====================================================
+
+CREATE TABLE foliar_quimicos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    ph DECIMAL(10,4),
+    ce DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE foliar_macros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    calcio DECIMAL(10,4),
+    magnesio DECIMAL(10,4),
+    potasio DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE foliar_nitrogeno (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    ml_gastado DECIMAL(10,4),
+    normalidad DECIMAL(10,4),
+    resultado DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+-- =====================================================
+-- AGUAS
+-- =====================================================
+
+CREATE TABLE agua_carbonatos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    ml_h2so4 DECIMAL(10,4),
+    normalidad_h2so4 DECIMAL(10,4),
+    volumen_muestra DECIMAL(10,4),
+    carbonatos DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE agua_dureza (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    ml_edta DECIMAL(10,4),
+    ml_muestra DECIMAL(10,4),
+    dureza DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE agua_salinidad (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    lectura_psu DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+-- =====================================================
+-- CAÑA
+-- =====================================================
+
+CREATE TABLE cana_brixpol (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    brix DECIMAL(10,4),
+    pol DECIMAL(10,4),
+    peso_torta DECIMAL(10,4),
+    pureza_jugo DECIMAL(10,4),
+    porcentaje_jugo DECIMAL(10,4),
+    rendimiento_comercial_lbs DECIMAL(10,4),
+    rendimiento_comercial_kg DECIMAL(10,4),
+    rendimiento_real_lbs DECIMAL(10,4),
+    rendimiento_real_kg DECIMAL(10,4),
+    porcentaje_pol_cana DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+CREATE TABLE cana_humedad (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    no_bandeja DECIMAL(10,4),
+    peso_bandeja DECIMAL(10,4),
+    peso_muestra DECIMAL(10,4),
+    peso_bandeja_seca DECIMAL(10,4),
+    peso_bandeja_humeda DECIMAL(10,4),
+    porcentaje_humedad DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+-- =====================================================
+-- MIELES
+-- =====================================================
+
+CREATE TABLE mieles_brix (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_formulario INT,
+    producto VARCHAR(255),
+    ingenio VARCHAR(255),
+    dia_zafra VARCHAR(255),
+    brix_obs DECIMAL(10,4),
+    brix_corr DECIMAL(10,4),
+    FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
+);
+
+```
+
+```
+```

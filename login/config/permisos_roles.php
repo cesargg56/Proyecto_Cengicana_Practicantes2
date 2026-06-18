@@ -1,0 +1,244 @@
+<?php
+
+function asegurar_tablas_permisos(PDO $conn)
+{
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS permisos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nombre_permiso VARCHAR(100) NOT NULL UNIQUE,
+            descripcion VARCHAR(255)
+        )
+    ");
+
+    $conn->exec("
+        CREATE TABLE IF NOT EXISTS rol_permiso (
+            rol_id INT NOT NULL,
+            permiso_id INT NOT NULL,
+            PRIMARY KEY (rol_id, permiso_id),
+            CONSTRAINT fk_rol_permiso_rol
+                FOREIGN KEY (rol_id) REFERENCES roles(id)
+                ON DELETE CASCADE,
+            CONSTRAINT fk_rol_permiso_permiso
+                FOREIGN KEY (permiso_id) REFERENCES permisos(id)
+                ON DELETE CASCADE
+        )
+    ");
+
+    sembrar_permisos_base($conn);
+}
+
+function sembrar_permisos_base(PDO $conn)
+{
+    $permisos = [
+        'ver_dashboard' => 'Permite ver el dashboard general',
+        'gestionar_solicitudes' => 'Permite aprobar y rechazar solicitudes del modulo de visitas',
+        'ver_solicitudes' => 'Permite ver el listado de solicitudes del modulo de visitas',
+        'gestionar_pagos' => 'Permite marcar solicitudes como pagadas',
+        'ver_pagos' => 'Permite ver el dashboard de pagos',
+        'gestionar_usuarios' => 'Permite crear y editar usuarios',
+        'gestionar_roles' => 'Permite editar roles y sus permisos',
+        'gestionar_modulos' => 'Permite gestionar los modulos del sistema',
+        'gestionar_ingenios' => 'Permite gestionar los ingenios',
+        'gestionar_areas' => 'Permite crear y editar areas del modulo de visitas',
+        'ver_solicitudes_aprobadas' => 'Permite ver solo solicitudes aprobadas',
+        'enviar_correos' => 'Permite enviar correos de solicitudes',
+        'ocultar_solicitudes' => 'Permite ocultar solicitudes del dashboard',
+        'ver_cursos_cengi' => 'Permite ver el modulo de cursos y su listado principal',
+        'gestionar_cursos_cengi' => 'Permite crear, editar y administrar cursos',
+        'ver_usuarios_cengi' => 'Permite ver los usuarios del modulo de cursos',
+        'gestionar_usuarios_cengi' => 'Permite crear y editar usuarios del modulo de cursos',
+        'ver_ingenios_cengi' => 'Permite ver los ingenios del modulo de cursos',
+        'gestionar_ingenios_cengi' => 'Permite crear y editar ingenios del modulo de cursos',
+        'ver_participantes_cengi' => 'Permite ver el listado de participantes',
+        'cargar_participantes_cengi' => 'Permite cargar participantes desde CSV o Excel',
+        'editar_participantes_cengi' => 'Permite editar participantes',
+        'eliminar_participantes_cengi' => 'Permite desactivar participantes',
+        'gestionar_participantes_cengi' => 'Permite crear, cargar y actualizar participantes',
+        'ver_solicitudes_cengi' => 'Permite ver solicitudes de inscripcion en Cengicursos',
+        'editar_solicitudes_cengi' => 'Permite editar solicitudes de inscripcion en Cengicursos',
+        'aprobar_solicitudes_cengi' => 'Permite aprobar solicitudes de inscripcion en Cengicursos',
+        'rechazar_solicitudes_cengi' => 'Permite rechazar solicitudes de inscripcion en Cengicursos',
+        'gestionar_solicitudes_cengi' => 'Permite aprobar y rechazar solicitudes de inscripcion en Cengicursos',
+        'ver_reportes_cengi' => 'Permite ver y generar reportes de Cengicursos',
+        'gestionar_notas_cengi' => 'Permite registrar asistencia, evaluaciones y diplomas en cursos',
+        'subir_diplomas_cengi' => 'Permite subir y actualizar diplomas en cursos',
+    ];
+
+    $stmt = $conn->prepare("
+        INSERT IGNORE INTO permisos (nombre_permiso, descripcion)
+        VALUES (?, ?)
+    ");
+
+    foreach ($permisos as $nombre => $descripcion) {
+        $stmt->execute([$nombre, $descripcion]);
+    }
+}
+
+function obtener_permisos(PDO $conn)
+{
+    $stmt = $conn->query("
+        SELECT id, nombre_permiso, descripcion
+        FROM permisos
+        ORDER BY nombre_permiso
+    ");
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function obtener_permisos_rol(PDO $conn, $rolId)
+{
+    $stmt = $conn->prepare("
+        SELECT p.nombre_permiso
+        FROM rol_permiso rp
+        INNER JOIN permisos p ON p.id = rp.permiso_id
+        WHERE rp.rol_id = ?
+    ");
+    $stmt->execute([$rolId]);
+
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+function agrupar_permisos(array $permisos)
+{
+    $grupos = [
+        'Permisos de visitas' => [],
+        'Permisos de cursos' => [],
+        'Permisos de pagos' => [],
+        'Permisos de usuarios y accesos' => [],
+        'Permisos generales' => [],
+    ];
+
+    foreach ($permisos as $permiso) {
+        $grupos[clasificar_grupo_permiso($permiso['nombre_permiso'])][] = $permiso;
+    }
+
+    return array_filter($grupos);
+}
+
+function clasificar_grupo_permiso($nombrePermiso)
+{
+    $nombre = strtolower((string) $nombrePermiso);
+
+    if (strpos($nombre, 'curso') !== false || strpos($nombre, 'participante') !== false || strpos($nombre, 'asistencia') !== false || strpos($nombre, 'evaluacion') !== false || strpos($nombre, 'ingenio') !== false || strpos($nombre, 'cengi') !== false || strpos($nombre, 'nota') !== false) {
+        return 'Permisos de cursos';
+    }
+
+    if (strpos($nombre, 'pago') !== false) {
+        return 'Permisos de pagos';
+    }
+
+    if (strpos($nombre, 'usuario') !== false || strpos($nombre, 'rol') !== false || strpos($nombre, 'modulo') !== false || strpos($nombre, 'permiso') !== false) {
+        return 'Permisos de usuarios y accesos';
+    }
+
+    if (strpos($nombre, 'visita') !== false || strpos($nombre, 'solicitud') !== false || strpos($nombre, 'area') !== false || strpos($nombre, 'correo') !== false || strpos($nombre, 'museo') !== false) {
+        return 'Permisos de visitas';
+    }
+
+    return 'Permisos generales';
+}
+
+function titulo_corto_grupo_permiso($grupo)
+{
+    $mapa = [
+        'Permisos de visitas' => 'Visitas',
+        'Permisos de cursos' => 'Cursos',
+        'Permisos de pagos' => 'Pagos',
+        'Permisos de usuarios y accesos' => 'Usuarios y accesos',
+        'Permisos generales' => 'Generales',
+    ];
+
+    return $mapa[$grupo] ?? $grupo;
+}
+
+function descripcion_grupo_permiso($grupo)
+{
+    $mapa = [
+        'Permisos de visitas' => 'Controla solicitudes, areas, correos y seguimiento del modulo de visitas.',
+        'Permisos de cursos' => 'Agrupa acciones para cursos, participantes, notas, ingenios y asignaciones.',
+        'Permisos de pagos' => 'Reune permisos relacionados con estados de pago y control de cobros.',
+        'Permisos de usuarios y accesos' => 'Incluye gestion de usuarios, roles, modulos y acceso administrativo.',
+        'Permisos generales' => 'Permisos transversales que no pertenecen a un solo modulo.',
+    ];
+
+    return $mapa[$grupo] ?? '';
+}
+
+function etiqueta_permiso($nombrePermiso)
+{
+    $mapa = [
+        'ver_dashboard' => 'Ver dashboard',
+        'ver_solicitudes' => 'Ver solicitudes',
+        'ver_solicitudes_aprobadas' => 'Ver solicitudes aprobadas',
+        'gestionar_solicitudes' => 'Gestionar solicitudes',
+        'ocultar_solicitudes' => 'Ocultar solicitudes',
+        'enviar_correos' => 'Enviar correos',
+        'gestionar_areas' => 'Gestionar areas',
+        'gestionar_usuarios' => 'Gestionar usuarios',
+        'gestionar_roles' => 'Gestionar roles',
+        'gestionar_modulos' => 'Gestionar modulos',
+        'gestionar_ingenios' => 'Gestionar ingenios',
+        'ver_cursos_cengi' => 'Ver cursos',
+        'gestionar_cursos_cengi' => 'Gestionar cursos',
+        'ver_usuarios_cengi' => 'Ver usuarios de cursos',
+        'gestionar_usuarios_cengi' => 'Gestionar usuarios de cursos',
+        'ver_ingenios_cengi' => 'Ver ingenios de cursos',
+        'gestionar_ingenios_cengi' => 'Gestionar ingenios de cursos',
+        'ver_participantes_cengi' => 'Ver participantes',
+        'cargar_participantes_cengi' => 'Cargar participantes',
+        'editar_participantes_cengi' => 'Editar participantes',
+        'eliminar_participantes_cengi' => 'Eliminar participantes',
+        'gestionar_participantes_cengi' => 'Gestionar participantes',
+        'ver_solicitudes_cengi' => 'Ver solicitudes de cursos',
+        'editar_solicitudes_cengi' => 'Editar solicitudes de cursos',
+        'aprobar_solicitudes_cengi' => 'Aprobar solicitudes de cursos',
+        'rechazar_solicitudes_cengi' => 'Rechazar solicitudes de cursos',
+        'gestionar_solicitudes_cengi' => 'Gestionar solicitudes de cursos',
+        'ver_reportes_cengi' => 'Ver reportes de cursos',
+        'gestionar_notas_cengi' => 'Gestionar notas y diplomas',
+        'subir_diplomas_cengi' => 'Subir diplomas',
+    ];
+
+    if (isset($mapa[$nombrePermiso])) {
+        return $mapa[$nombrePermiso];
+    }
+
+    return ucwords(str_replace('_', ' ', (string) $nombrePermiso));
+}
+
+function guardar_permisos_rol(PDO $conn, $rolId, array $permisos)
+{
+    $conn->beginTransaction();
+
+    try {
+        $delete = $conn->prepare("DELETE FROM rol_permiso WHERE rol_id = ?");
+        $delete->execute([$rolId]);
+
+        if (!empty($permisos)) {
+            $insert = $conn->prepare("
+                INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
+                SELECT ?, id
+                FROM permisos
+                WHERE nombre_permiso = ?
+            ");
+
+            foreach ($permisos as $permiso) {
+                $insert->execute([$rolId, $permiso]);
+            }
+        }
+
+        $conn->commit();
+    } catch (Exception $e) {
+        $conn->rollBack();
+        throw $e;
+    }
+}
+
+function usuario_puede_permiso($permission)
+{
+    if (isset($_SESSION['es_superadmin']) && (int) $_SESSION['es_superadmin'] === 1) {
+        return true;
+    }
+
+    return in_array($permission, $_SESSION['user_permissions'] ?? [], true);
+}

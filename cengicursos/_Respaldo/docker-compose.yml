@@ -1,0 +1,40 @@
+version: '2'
+services:
+  nginx:
+    build:
+      context: ./
+      dockerfile: dockerfiles/nginx.docker
+    volumes:
+      - './:/var/www'
+    restart: always
+    ports:
+      - '8084:80'
+    links:
+      - php
+  php:
+    build:
+      context: ./
+      dockerfile: dockerfiles/php.docker
+    volumes:
+      - './:/var/www'
+      - './dockerfiles/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini'
+    restart: always
+    links:
+      - mysql
+    environment:
+      - DB_PORT=3306
+      - DB_HOST=mysql
+  mysql:
+    build:
+      context: ./
+      dockerfile: dockerfiles/mysql.docker
+    volumes:
+      - 'mysql-data:/var/lib/mysql'
+    restart: always
+    environment:
+      - 'MYSQL_ROOT_PASSWORD=u}bp*H}rWD4-}Q4%'
+      - MYSQL_DATABASE=cengi_cursos
+    ports:
+      - '33063:3306'
+volumes:
+  mysql-data: null

@@ -1,0 +1,342 @@
+﻿.logo {
+    margin: 0 auto;
+    width: 495px;
+    height: 390px;
+}
+
+body.cengi-canvas {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.94)),
+        linear-gradient(90deg, rgba(76, 154, 100, 0.05) 0, rgba(76, 154, 100, 0.05) 1px, transparent 1px, transparent 116px),
+        linear-gradient(rgba(76, 154, 100, 0.035) 0, rgba(76, 154, 100, 0.035) 1px, transparent 1px, transparent 58px),
+        linear-gradient(180deg, #f7fbf5 0%, #eef5ea 100%);
+    color: #294033;
+}
+
+.cengi-canvas .container {
+    width: min(1220px, calc(100% - 32px));
+}
+
+.cengi-canvas .cengi-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    padding: 28px 30px;
+    margin-bottom: 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 244, 0.98)) !important;
+    color: #294033 !important;
+    border: 1px solid #dbe8dc;
+    border-top: 6px solid #73BC25;
+    box-shadow: 0 14px 30px rgba(41, 64, 51, 0.08) !important;
+}
+
+.cengi-canvas .cengi-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(47, 111, 68, 0.045) 0, rgba(47, 111, 68, 0.045) 1px, transparent 1px, transparent 120px),
+        linear-gradient(rgba(47, 111, 68, 0.035) 0, rgba(47, 111, 68, 0.035) 1px, transparent 1px, transparent 56px);
+    pointer-events: none;
+}
+
+.cengi-canvas .cengi-hero h1,
+.cengi-canvas .cengi-hero h2 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    color: #5e9b1d !important;
+    position: relative;
+    z-index: 1;
+}
+
+.cengi-canvas .cengi-hero p {
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #4f6655 !important;
+    opacity: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.cengi-canvas .cengi-chip {
+    position: relative;
+    z-index: 1;
+    background: #edf5ea !important;
+    color: #2f6f44 !important;
+    border: 1px solid #d7e6d4;
+    letter-spacing: 0.07em;
+}
+
+.cengi-canvas .cengi-card-grid {
+    gap: 18px;
+}
+
+.cengi-canvas .cengi-card {
+    position: relative;
+    padding: 24px;
+    border: 1px solid #dce7d8;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 10px 22px rgba(41, 64, 51, 0.06);
+}
+
+.cengi-canvas .cengi-card::after {
+    content: "";
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 0;
+    height: 4px;
+    border-radius: 999px;
+background: linear-gradient(90deg, #73BC25, #5e9b1d);}
+
+.cengi-canvas .cengi-card h3 {
+    color: #1f5632;
+    font-size: 17px;
+    margin-bottom: 10px;
+}
+
+.cengi-canvas .cengi-card p:last-child {
+    margin-bottom: 0;
+}
+
+.cengi-canvas .panel.panel-success {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #dbe8dc !important;
+    box-shadow: 0 10px 24px rgba(41, 64, 51, 0.07);
+}
+
+.cengi-canvas .panel.panel-success > .panel-heading {
+    position: relative;
+    background: #ffffff !important;
+    color: #1f5632 !important;
+    border-bottom: 1px solid #e8efe6 !important;
+    padding: 18px 22px !important;
+}
+
+.cengi-canvas .panel.panel-success > .panel-heading::after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    bottom: 0;
+    width: 64px;
+    height: 3px;
+    background: linear-gradient(90deg, #2f6f44, #94c973);
+    border-radius: 999px;
+}
+
+.cengi-canvas .panel.panel-success > .panel-heading .panel-title,
+.cengi-canvas .panel .panel-title {
+    color: #1f5632 !important;
+    font-size: 18px !important;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.cengi-canvas .panel .panel-body {
+    padding-top: 22px;
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.cengi-canvas .row form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.cengi-canvas .row form .col-sm-4,
+.cengi-canvas .row form .col-sm-2 {
+    float: none;
+    width: auto;
+    padding: 0;
+}
+
+.cengi-canvas .row form .col-sm-4 {
+    flex: 1 1 280px;
+}
+
+.cengi-canvas .row form .col-sm-2 {
+    flex: 0 0 auto;
+}
+
+.cengi-canvas .btn {
+    border-radius: 9px !important;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.cengi-canvas .btn-primary,
+.cengi-canvas .btn-success,
+.cengi-canvas .btn-info {
+    box-shadow: 0 8px 16px rgba(47, 111, 68, 0.12);
+}
+
+.cengi-canvas .btn-default {
+    border: 1px solid #d8e4d5;
+    background: #fff;
+    color: #294033;
+}
+
+.cengi-canvas .form-control {
+    border-radius: 10px !important;
+    border: 1px solid #dbe8dc !important;
+    min-height: 42px;
+    box-shadow: none !important;
+}
+
+.cengi-canvas .form-control:focus {
+    border-color: #7ab56d !important;
+    box-shadow: 0 0 0 3px rgba(122, 181, 109, 0.14) !important;
+}
+
+.cengi-canvas .table {
+    margin-bottom: 0;
+    border: 1px solid #e3ebe0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.cengi-canvas .table > thead > tr > th {
+    white-space: nowrap;
+    background: #f2f7ef !important;
+    color: #2c5b3b !important;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #dde8d9 !important;
+}
+
+.cengi-canvas .table > tbody > tr > td {
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid #edf2ea !important;
+}
+
+.cengi-canvas .table-striped > tbody > tr:nth-of-type(odd) td {
+    background: #fbfdf9;
+}
+
+.cengi-canvas .table-hover > tbody > tr:hover td {
+    background: #f6fbf4 !important;
+}
+
+.cengi-canvas .btn-xs,
+.cengi-canvas .btn-sm {
+    border-radius: 9px;
+}
+
+.cengi-canvas .well {
+    border: 1px solid #dde8d9;
+    border-radius: 14px;
+    background: #f7fbf5;
+}
+
+.cengi-canvas .well p {
+    margin-bottom: 12px;
+}
+
+.cengi-canvas .cengi-section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #edf5ea;
+    color: #2f6f44;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.cengi-canvas .panel-body-scroll {
+    border-radius: 14px;
+}
+
+.cengi-canvas .tabla-solicitudes .col-acciones {
+    min-width: 250px;
+    width: 250px;
+}
+
+.cengi-canvas .acciones-solicitud {
+    gap: 10px;
+}
+
+.cengi-canvas .accion-solicitud {
+    min-width: 102px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(41, 64, 51, 0.10);
+}
+
+.cengi-canvas .accion-solicitud.editar {
+background: linear-gradient(135deg, #73BC25, #5e9b1d) !important;
+}
+
+.cengi-canvas .accion-solicitud.aprobar {
+    background: linear-gradient(135deg, #5e9b1d, #73BC25) !important;
+}
+
+.cengi-canvas .accion-solicitud.rechazar {
+    background: linear-gradient(135deg, #a63f3f, #cd5a5a) !important;
+}
+
+.cengi-canvas .estado-label {
+    background: #eef8df !important;
+    color: #2f6f44 !important;
+}
+
+.cengi-canvas .text-muted {
+    color: #7a8f7f;
+}
+
+.cengi-canvas .modal-content {
+    border-radius: 16px;
+    border: 1px solid #dce7d8;
+    box-shadow: 0 18px 40px rgba(41, 64, 51, 0.14);
+}
+
+.cengi-canvas .modal-header,
+.cengi-canvas .model-header {
+    padding: 18px 20px 0;
+}
+
+.cengi-canvas .modal-body {
+    padding: 18px 20px;
+}
+
+.cengi-canvas .modal-footer {
+    border-top: 1px solid #edf2ea;
+    padding: 16px 20px 20px;
+}
+
+@media (max-width: 767px) {
+    body.cengi-canvas {
+        background-size: auto;
+    }
+
+    .cengi-canvas .container {
+        width: calc(100% - 22px);
+    }
+
+    .cengi-canvas .cengi-hero {
+        padding: 22px;
+    }
+
+    .cengi-canvas .panel.panel-success > .panel-heading {
+        padding: 16px 18px !important;
+    }
+
+    .cengi-canvas .row form {
+        display: block;
+    }
+
+    .cengi-canvas .row form .col-sm-4,
+    .cengi-canvas .row form .col-sm-2 {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}

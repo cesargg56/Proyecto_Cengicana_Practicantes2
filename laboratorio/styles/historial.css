@@ -1,0 +1,110 @@
+@import url('base.css');
+
+body {
+    font-family: 'Hanken Grotesk', sans-serif;
+    background-color: var(--surface);
+    background-image:
+      linear-gradient(to right, #ddecc8 1px, transparent 1px),
+      linear-gradient(to bottom, #ddecc8 1px, transparent 1px);
+    background-size: 20px 20px;
+    color: var(--green-400);
+    min-height: 100vh;
+    padding-bottom: 80px;
+}
+
+.page-wrap {
+    max-width: 1000px;
+    margin: 80px auto 0;
+    padding: 0 16px;
+}
+
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; color: var(--green-600); text-decoration: none;
+  margin-bottom: 1.5rem; font-weight: 600;
+}
+.back-link:hover { color: var(--green-800); }
+
+.card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(59,109,17,0.06);
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green-600);
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
+    margin-top: 1.5rem;
+}
+
+.historial-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 560px;
+}
+
+.historial-table th,
+.historial-table td {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.historial-table th {
+    background: var(--green-50);
+    color: var(--green-800);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.historial-table tr:nth-child(even) td {
+    background: var(--green-50);
+}
+
+.historial-table tr:hover td {
+    background: var(--green-100);
+}
+
+.historial-table a {
+    display: inline-block;
+    color: var(--green-400);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.historial-table a:hover {
+    color: var(--teal-600);
+}
+
+.historial-table td:last-child {
+    min-width: 130px;
+}
+
+/* Botón guardar */
+.btn-submit {
+    margin-top: 1.5rem; padding: 10px 24px;
+    background: var(--green-600); color: var(--white);
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59,109,17,0.22);
+    transition: background 0.15s, transform 0.1s;
+}
+.btn-submit:hover { background: var(--green-800); }
+.btn-submit:active { transform: scale(0.97); }

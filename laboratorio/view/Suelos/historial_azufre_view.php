@@ -1,0 +1,63 @@
+<?php
+require_once __DIR__ . '/../../includes/auth.php';
+lab_require_analysis_access('suelos.azufre');
+$historial = $historial ?? [];
+?>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial Azufre</title>
+    <link rel="stylesheet" href="../../styles/formularios.css">
+    <link rel="stylesheet" href="../../styles/historial.css">
+</head>
+
+<body>
+<div class="page-wrap">
+    <div class="card historial-card">
+
+        <h2>Historial de Análisis de Azufre</h2>
+
+        <a class="back-link" href="../../view/labc_index.php">← Volver</a>
+
+        <div class="table-wrap">
+            <table class="historial-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Absorbancia</th>
+                        <th>PPM SO4</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+    <?php foreach ($historial as $fila): ?>
+
+        <tr>
+
+            <td><?= $fila['id'] ?></td>
+
+            <td><?= $fila['absorbancia'] ?></td>
+
+            <td><?= $fila['ppm_so4'] ?></td>
+
+            <td>
+                <a href="curva_azufre_controller.php?id=<?= $fila['id'] ?>">
+                    Ver gráfica
+                </a>
+            </td>
+
+        </tr>
+
+    <?php endforeach; ?>
+
+</tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

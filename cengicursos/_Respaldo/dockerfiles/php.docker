@@ -1,0 +1,14 @@
+FROM php:7.1-fpm
+
+ENV TZ="/usr/share/zoneinfo/America/Guatemala"
+
+RUN apt-get update && apt-get install -y libmcrypt-dev mysql-client zlib1g-dev \
+    && docker-php-ext-install mcrypt pdo_mysql zip mysqli \
+    && docker-php-ext-enable mysqli
+
+#Install git
+RUN apt-get update \
+    && apt-get install -y git
+RUN docker-php-ext-install pdo
+
+WORKDIR /var/www

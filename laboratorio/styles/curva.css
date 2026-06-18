@@ -1,0 +1,117 @@
+@import url('base.css');
+
+body {
+    font-family: 'Hanken Grotesk', sans-serif;
+    background-color: var(--surface);
+    background-image:
+      linear-gradient(to right, #ddecc8 1px, transparent 1px),
+      linear-gradient(to bottom, #ddecc8 1px, transparent 1px);
+    background-size: 20px 20px;
+    color: var(--text-main);
+    min-height: 100vh;
+    margin: 0;
+    padding-bottom: 80px;
+}
+
+.page-wrap {
+    max-width: 980px;
+    margin: 80px auto 0;
+    padding: 0 16px;
+}
+
+.curva-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(59,109,17,0.06);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--green-600);
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.back-link:hover {
+    color: var(--green-800);
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green-800);
+    margin-bottom: 1rem;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    margin-bottom: 1.5rem;
+}
+
+#grafica {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 320px;
+}
+
+#estadisticas {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-main);
+    font-family: inherit;
+}
+
+#estadisticas p {
+    margin: 0 0 10px;
+    line-height: 1.6;
+}
+
+#estadisticas p:last-child {
+    margin-bottom: 0;
+}
+
+#estadisticas strong {
+    color: var(--green-600);
+}
+
+@media (max-width: 680px) {
+    .page-wrap {
+        margin-top: 60px;
+        padding: 0 12px;
+    }
+
+    .curva-card {
+        padding: 24px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    .back-link {
+        font-size: 13px;
+    }
+
+    .chart-container {
+        min-height: 260px;
+        padding: 0.75rem;
+    }
+
+    #estadisticas {
+        padding: 16px;
+    }
+}
