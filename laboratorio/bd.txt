@@ -83,6 +83,8 @@ CREATE TABLE tipo_analisis (
 
     nombre VARCHAR(255),
 
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+
     CONSTRAINT fk_tipo_analisis_tipo_muestra
         FOREIGN KEY (id_tipo_muestra)
         REFERENCES tipo_muestra(id_tipo)

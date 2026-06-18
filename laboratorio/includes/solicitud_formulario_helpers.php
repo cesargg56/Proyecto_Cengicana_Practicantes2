@@ -71,15 +71,7 @@ function obtenerTipoMuestra(PDO $conexion, $tipoFormulario) {
 
   if ($tipo) return $tipo;
 
-  $prefijo = strtoupper(substr($nombre, 0, 1));
-  $insert = $conexion->prepare("INSERT INTO tipo_muestra (nombre, prefijo) VALUES (?, ?)");
-  $insert->execute([$nombre, $prefijo]);
-
-  return [
-    'id_tipo' => $conexion->lastInsertId(),
-    'nombre' => $nombre,
-    'prefijo' => $prefijo,
-  ];
+  throw new RuntimeException('El tipo de muestra "' . $nombre . '" no existe en el catálogo del laboratorio.');
 }
 
 function obtenerLote(PDO $conexion, $codigoLote) {
@@ -105,12 +97,7 @@ function obtenerTipoAnalisis(PDO $conexion, $idTipoMuestra, $nombreAnalisis) {
   $stmt->execute([$idTipoMuestra, $nombreAnalisis]);
   $analisis = $stmt->fetch();
 
-  if ($analisis) return (int) $analisis['id_tipo'];
-
-  $insert = $conexion->prepare("INSERT INTO tipo_analisis (id_tipo_muestra, nombre) VALUES (?, ?)");
-  $insert->execute([$idTipoMuestra, $nombreAnalisis]);
-
-  return (int) $conexion->lastInsertId();
+  return $analisis ? (int) $analisis['id_tipo'] : null;
 }
 
 function obtenerNumeroCodigoLab($codigoLab) {

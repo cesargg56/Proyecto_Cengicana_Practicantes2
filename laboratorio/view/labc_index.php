@@ -370,6 +370,13 @@ if (!in_array($activeArea, $sampleTypeKeys, true)) {
 $stmtAnalisis = $conexion->query("SELECT id_tipo, id_tipo_muestra, nombre FROM tipo_analisis ORDER BY id_tipo");
 $dbAnalisis = $stmtAnalisis->fetchAll(PDO::FETCH_ASSOC);
 
+
+$canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
+$canAnalisis = lab_can('laboratorio.analisis.ver');
+$canBlancoControl = lab_can('laboratorio.blanco_control.ver');
+$canConsolidacion = lab_can('laboratorio.consolidacion.ver');
+$canManageUsers = lab_can('laboratorio.usuarios.gestionar');
+
 $analysesBySampleTypeId = [];
 foreach ($dbAnalisis as $analisis) {
     $idMuestra = $analisis['id_tipo_muestra'];
@@ -414,6 +421,7 @@ foreach ($suelosAnalyses as $analisis) {
 
 $suelosFisicos = labc_visible_analysis($suelosFisicos);
 $suelosQuimicos = labc_visible_analysis($suelosQuimicos);
+
 
 $suelosCardsFisicos = labc_prepare_cards($suelosFisicos, 'suelos.textura');
 $suelosCardsQuimicos = labc_prepare_cards($suelosQuimicos, 'suelos.ph');
@@ -467,6 +475,14 @@ if ($canConsolidacion) {
         'href' => '../controllers/consolidacion_controller.php',
         'label' => 'Hoja de consolidación',
         'icon' => 'fa-layer-group',
+    ];
+}
+if ($canAnalisis) {
+    $utilityCards[] = [
+        'key' => 'analisis.catalogo',
+        'href' => '../catalogo_analisis.php',
+        'label' => 'Catálogo de análisis',
+        'icon' => 'fa-table-list',
     ];
 }
 $utilityCards = labc_prepare_cards($utilityCards, 'consolidacion');
