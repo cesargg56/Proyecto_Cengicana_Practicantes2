@@ -20,16 +20,108 @@ function labc_e($value): string
 
 function labc_visible_analysis(array $items): array
 {
-    return array_values(array_filter($items, function ($item) {
+    return array_values(array_filter($items, static function ($item) {
         return lab_can_analysis($item['key']);
     }));
 }
 
-function labc_render_cards(array $items): void
+function labc_card_icon(string $key): string
 {
-    foreach ($items as $item) {
-        echo '<a class="tarjeta" href="' . labc_e($item['href']) . '">' . labc_e($item['label']) . '</a>';
+    static $icons = [
+        'usuarios' => 'fa-users-gear',
+        'suelos' => 'fa-mountain',
+        'aguas' => 'fa-droplet',
+        'foliares' => 'fa-leaf',
+        'cana' => 'fa-tractor',
+        'mieles' => 'fa-mug-hot',
+        'suelos.textura' => 'fa-mountain',
+        'suelos.humedad' => 'fa-droplet',
+        'suelos.humedad_residual' => 'fa-water',
+        'suelos.dap' => 'fa-layer-group',
+        'suelos.cc' => 'fa-seedling',
+        'suelos.pmp' => 'fa-leaf',
+        'suelos.ph' => 'fa-flask',
+        'suelos.cic' => 'fa-vials',
+        'suelos.mo' => 'fa-microscope',
+        'suelos.macroscic' => 'fa-flask-vial',
+        'suelos.micros' => 'fa-vials',
+        'suelos.nitrogeno' => 'fa-leaf',
+        'suelos.boro' => 'fa-flask',
+        'suelos.azufre' => 'fa-fire-flame-curved',
+        'suelos.fosforo' => 'fa-atom',
+        'aguas.macros' => 'fa-flask-vial',
+        'aguas.ras' => 'fa-water',
+        'aguas.boro' => 'fa-flask',
+        'aguas.ph' => 'fa-droplet',
+        'aguas.salinidad' => 'fa-wind',
+        'aguas.dureza' => 'fa-gem',
+        'aguas.carbonatos' => 'fa-vial',
+        'aguas.micros' => 'fa-flask',
+        'aguas.fosforo' => 'fa-atom',
+        'aguas.conductividad' => 'fa-bolt',
+        'aguas.tds' => 'fa-cubes',
+        'aguas.resistividad' => 'fa-wave-square',
+        'aguas.cloruros' => 'fa-flask',
+        'aguas.alcanilidad' => 'fa-scale-balanced',
+        'aguas.bicarbonato' => 'fa-vials',
+        'foliares.macros' => 'fa-leaf',
+        'foliares.nitrogeno' => 'fa-seedling',
+        'foliares.boro' => 'fa-flask',
+        'foliares.micros' => 'fa-vials',
+        'foliares.fosforo' => 'fa-atom',
+        'cana.peso_seco' => 'fa-scale-balanced',
+        'cana.fibra' => 'fa-wheat-awn',
+        'cana.humedad' => 'fa-droplet',
+        'cana.brixpol' => 'fa-chart-line',
+        'mieles.brix' => 'fa-chart-column',
+        'blancos.control' => 'fa-vial',
+        'consolidacion' => 'fa-layer-group',
+    ];
+
+    return $icons[$key] ?? 'fa-flask';
+}
+
+function labc_prepare_cards(array $items, ?string $highlightKey = null): array
+{
+    $cards = [];
+    foreach ($items as $index => $item) {
+        $key = (string) ($item['key'] ?? '');
+        $label = (string) ($item['label'] ?? '');
+        $cards[] = [
+            'key' => $key,
+            'label' => $label,
+            'href' => (string) ($item['href'] ?? '#'),
+            'icon' => (string) ($item['icon'] ?? labc_card_icon($key)),
+            'active' => !empty($item['active']) || ($highlightKey !== null && $key === $highlightKey) || ($highlightKey === null && $index === 0),
+            'ghost' => !empty($item['ghost']),
+            'search' => trim($label . ' ' . ($item['search'] ?? '')),
+        ];
     }
+
+    return $cards;
+}
+
+function labc_section_href(string $area): string
+{
+    return '?area=' . rawurlencode($area) . '#section-' . $area;
+}
+
+function labc_history_href(string $area): ?string
+{
+    switch ($area) {
+        case 'suelos':
+        case 'aguas':
+        case 'foliares':
+        case 'cana':
+            return 'dashboard.php?tipo_reporte=' . rawurlencode($area);
+        default:
+            return null;
+    }
+}
+
+$activeArea = trim((string) ($_GET['area'] ?? 'aguas'));
+if (!in_array($activeArea, ['suelos', 'aguas', 'foliares', 'cana', 'mieles'], true)) {
+    $activeArea = 'aguas';
 }
 
 $suelosFisicos = labc_visible_analysis([
@@ -43,6 +135,7 @@ $suelosFisicos = labc_visible_analysis([
 
 $suelosQuimicos = labc_visible_analysis([
     ['key' => 'suelos.ph', 'href' => '../controllers/Suelos/ph_controller.php', 'label' => 'pH'],
+    ['key' => 'suelos.cic', 'href' => '../controllers/Suelos/cic_controller.php', 'label' => 'CIC'],
     ['key' => 'suelos.mo', 'href' => '../controllers/Suelos/mo_controller.php', 'label' => '%MO'],
     ['key' => 'suelos.macroscic', 'href' => '../controllers/Suelos/macroscic_controller.php', 'label' => 'Macronutrientes y CIC'],
     ['key' => 'suelos.micros', 'href' => '../controllers/Suelos/micros_controller.php', 'label' => 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)'],
@@ -50,14 +143,6 @@ $suelosQuimicos = labc_visible_analysis([
     ['key' => 'suelos.boro', 'href' => '../controllers/Suelos/boro_controller.php', 'label' => 'Boro'],
     ['key' => 'suelos.azufre', 'href' => '../controllers/Suelos/azufre_controller.php', 'label' => 'Azufre'],
     ['key' => 'suelos.fosforo', 'href' => '../controllers/Suelos/fosforo_controller.php', 'label' => 'Fósforo'],
-]);
-
-$foliares = labc_visible_analysis([
-    ['key' => 'foliares.macros', 'href' => '../controllers/Foliares/macros_controller.php', 'label' => 'Macronutrientes'],
-    ['key' => 'foliares.nitrogeno', 'href' => '../controllers/Foliares/nitrogeno_controller.php', 'label' => 'Nitrógeno'],
-    ['key' => 'foliares.boro', 'href' => '../controllers/Foliares/boro_controller.php', 'label' => 'Boro'],
-    ['key' => 'foliares.micros', 'href' => '../controllers/Foliares/micros_controller.php', 'label' => 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)'],
-    ['key' => 'foliares.fosforo', 'href' => '../controllers/Foliares/fosforo_controller.php', 'label' => 'Fósforo'],
 ]);
 
 $aguas = labc_visible_analysis([
@@ -78,6 +163,14 @@ $aguas = labc_visible_analysis([
     ['key' => 'aguas.bicarbonato', 'href' => '../controllers/Aguas/bicarbonato_controller.php', 'label' => 'Bicarbonatos'],
 ]);
 
+$foliares = labc_visible_analysis([
+    ['key' => 'foliares.macros', 'href' => '../controllers/Foliares/macros_controller.php', 'label' => 'Macronutrientes'],
+    ['key' => 'foliares.nitrogeno', 'href' => '../controllers/Foliares/nitrogeno_controller.php', 'label' => 'Nitrogeno'],
+    ['key' => 'foliares.boro', 'href' => '../controllers/Foliares/boro_controller.php', 'label' => 'Boro'],
+    ['key' => 'foliares.micros', 'href' => '../controllers/Foliares/micros_controller.php', 'label' => 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)'],
+    ['key' => 'foliares.fosforo', 'href' => '../controllers/Foliares/fosforo_controller.php', 'label' => 'Fósforo'],
+]);
+
 $cana = labc_visible_analysis([
     ['key' => 'cana.peso_seco', 'href' => '../controllers/Cana/peso_seco_controller.php', 'label' => 'Peso seco'],
     ['key' => 'cana.fibra', 'href' => '../controllers/Cana/fibra_controller.php', 'label' => 'Fibra'],
@@ -89,8 +182,147 @@ $mieles = labc_visible_analysis([
     ['key' => 'mieles.brix', 'href' => '../controllers/Mieles/brix_controller.php', 'label' => 'Brix'],
 ]);
 
+$canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
 $canBlancoControl = lab_can('laboratorio.blanco_control.ver');
 $canConsolidacion = lab_can('laboratorio.consolidacion.ver');
+$canManageUsers = lab_can('laboratorio.usuarios.gestionar');
+
+$suelosCardsFisicos = labc_prepare_cards($suelosFisicos, 'suelos.textura');
+$suelosCardsQuimicos = labc_prepare_cards($suelosQuimicos, 'suelos.ph');
+$aguasCards = labc_prepare_cards($aguas, 'aguas.ph');
+$foliaresCards = labc_prepare_cards($foliares, 'foliares.micros');
+$canaCards = labc_prepare_cards($cana, 'cana.humedad');
+$mielesCards = labc_prepare_cards(array_merge($mieles, [
+    [
+        'key' => 'mieles.proximos',
+        'href' => '#',
+        'label' => 'Próximos Análisis',
+        'icon' => 'fa-circle-plus',
+        'ghost' => true,
+    ],
+]), 'mieles.brix');
+
+$utilityCards = [];
+if ($canManageUsers) {
+    $utilityCards[] = [
+        'key' => 'usuarios',
+        'href' => '../usuarios.php',
+        'label' => 'Usuarios del laboratorio',
+        'icon' => 'fa-users-gear',
+    ];
+}
+if ($canBlancoControl) {
+    $utilityCards[] = [
+        'key' => 'blancos.control',
+        'href' => '../controllers/blanco_control_controller.php',
+        'label' => 'Blancos y Control Generales',
+        'icon' => 'fa-vial',
+    ];
+}
+if ($canConsolidacion) {
+    $utilityCards[] = [
+        'key' => 'consolidacion',
+        'href' => '../controllers/consolidacion_controller.php',
+        'label' => 'Hoja de consolidación',
+        'icon' => 'fa-layer-group',
+    ];
+}
+$utilityCards = labc_prepare_cards($utilityCards, 'consolidacion');
+
+$sections = [
+    [
+        'id' => 'suelos',
+        'nav_label' => 'Suelos',
+        'title' => 'Formularios de Suelos',
+        'subtitle' => 'Consulta los análisis físicos y químicos disponibles.',
+        'theme' => 'suelos',
+        'history_url' => labc_history_href('suelos'),
+        'groups' => [
+            ['title' => 'Físicos', 'cards' => $suelosCardsFisicos],
+            ['title' => 'Químicos', 'cards' => $suelosCardsQuimicos],
+        ],
+        'count' => count($suelosCardsFisicos) + count($suelosCardsQuimicos),
+        'active_card' => 'suelos.ph',
+    ],
+    [
+        'id' => 'aguas',
+        'nav_label' => 'Aguas',
+        'title' => 'Formularios de Aguas',
+        'subtitle' => 'Selecciona el tipo de análisis para tus muestras recibidas.',
+        'theme' => 'aguas',
+        'history_url' => labc_history_href('aguas'),
+        'cards' => $aguasCards,
+        'count' => count($aguasCards),
+        'active_card' => 'aguas.ph',
+    ],
+    [
+        'id' => 'foliares',
+        'nav_label' => 'Foliares',
+        'title' => 'Formularios de Foliares',
+        'subtitle' => 'Análisis de tejido y diagnóstico foliar.',
+        'theme' => 'foliares',
+        'history_url' => labc_history_href('foliares'),
+        'cards' => $foliaresCards,
+        'count' => count($foliaresCards),
+        'active_card' => 'foliares.micros',
+    ],
+    [
+        'id' => 'cana',
+        'nav_label' => 'Caña',
+        'title' => 'Formularios de Caña',
+        'subtitle' => 'Registros de proceso y calidad industrial.',
+        'theme' => 'cana',
+        'history_url' => labc_history_href('cana'),
+        'cards' => $canaCards,
+        'count' => count($canaCards),
+        'active_card' => 'cana.humedad',
+    ],
+    [
+        'id' => 'mieles',
+        'nav_label' => 'Mieles',
+        'title' => 'Formularios de Mieles',
+        'subtitle' => 'Análisis disponibles y próximos formularios.',
+        'theme' => 'mieles',
+        'history_url' => null,
+        'cards' => $mielesCards,
+        'count' => count($mielesCards),
+        'active_card' => 'mieles.brix',
+    ],
+];
+
+$sectionCounts = [];
+foreach ($sections as $section) {
+    $sectionCounts[$section['id']] = (int) $section['count'];
+}
+
+$visibleTotal = array_sum($sectionCounts);
+$activeSection = null;
+foreach ($sections as $section) {
+    if ($section['id'] === $activeArea) {
+        $activeSection = $section;
+        break;
+    }
+}
+if ($activeSection === null) {
+    $activeSection = $sections[0];
+}
+
+$sectionsById = [];
+foreach ($sections as $section) {
+    $sectionsById[$section['id']] = $section;
+}
+
+$displayOrder = array_merge(
+    [$activeArea],
+    array_values(array_diff(['suelos', 'aguas', 'foliares', 'cana', 'mieles'], [$activeArea]))
+);
+
+$displaySections = [];
+foreach ($displayOrder as $sectionId) {
+    if (isset($sectionsById[$sectionId])) {
+        $displaySections[] = $sectionsById[$sectionId];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -98,135 +330,308 @@ $canConsolidacion = lab_can('laboratorio.consolidacion.ver');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formularios de Análisis</title>
-    <link rel="stylesheet" href="../styles/index.css">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../css/formularios_dashboard.css?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <main class="page-wrap">
-        <header class="doc-header">
-            <div class="doc-header-left">
-                <div class="logo-circle">LAB</div>
-                <div>
-                    <p class="doc-kicker">Laboratorio agrícola</p>
-                    <h1 class="doc-title">Formularios de análisis</h1>
-                    <p class="doc-subtitle">Selecciona el módulo que deseas registrar o consultar.</p>
+    <div class="lab-app">
+        <aside class="lab-sidebar">
+            <div class="lab-brand">
+                <div class="lab-brand-mark">LAB</div>
+                <div class="lab-brand-copy">
+                    <span class="lab-brand-kicker">Gestión LAB</span>
+                    <strong>Panel de Control</strong>
                 </div>
             </div>
-            <div class="meta-badge">
-                <span>Panel</span>
-                LABC
+
+            <nav class="lab-nav" aria-label="Secciones de formularios">
+                <?php foreach ($displaySections as $section): ?>
+                    <a
+                        class="lab-nav-item <?= $activeArea === $section['id'] ? 'active' : '' ?>"
+                        href="<?= labc_e(labc_section_href($section['id'])) ?>"
+                        aria-current="<?= $activeArea === $section['id'] ? 'page' : 'false' ?>">
+                        <span class="lab-nav-icon"><i class="fa-solid <?= labc_e(labc_card_icon($section['id'])) ?>"></i></span>
+                        <span class="lab-nav-text">
+                            <strong><?= labc_e($section['nav_label']) ?></strong>
+                        </span>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
+
+            <div class="sidebar-footer">
+                <?php if ($canConsolidacion || $canBlancoControl): ?>
+                    <a class="sidebar-download" href="dashboard.php">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Descargar Reportes</span>
+                    </a>
+                <?php endif; ?>
+
+                <div class="sidebar-links">
+                    <a href="../index.php">
+                        <span>Inicio</span>
+                    </a>
+                    <a href="<?= labc_e(lab_logout_url()) ?>">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </div>
             </div>
-        </header>
+        </aside>
 
-        <div class="history-links">
-            <a href="../index.php">Volver al inicio principal</a>
-        </div>
+        <main class="lab-main">
+            <header class="lab-topbar">
+                <div class="search-shell">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        id="formSearch"
+                        placeholder="Buscar formularios..."
+                        autocomplete="off"
+                        aria-label="Buscar formularios">
+                </div>
 
-        <?php if ($canBlancoControl || $canConsolidacion): ?>
-            <section class="form-section">
-                <h2 class="section-title">Blancos y Control</h2>
-                <div class="card-grid">
-                    <?php if ($canBlancoControl): ?>
-                        <a class="tarjeta" href="../controllers/blanco_control_controller.php">Blancos y Control Generales</a>
+                <div class="top-actions">
+                    <?php if ($canCreateSolicitud): ?>
+                        <a class="primary-action" href="menu_solicitud.php">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Nueva solicitud</span>
+                        </a>
                     <?php endif; ?>
-                    <?php if ($canConsolidacion): ?>
-                        <a class="tarjeta" href="../controllers/consolidacion_controller.php">Hoja de consolidación</a>
-                    <?php endif; ?>
+
+                    <a class="text-action" href="dashboard.php">Informes</a>
+
+                    <button type="button" class="icon-action" aria-label="Notificaciones">
+                        <i class="fa-regular fa-bell"></i>
+                    </button>
+
+                    <button type="button" class="icon-action" aria-label="Configuración">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <div class="avatar-chip" aria-hidden="true">LAB</div>
+                </div>
+            </header>
+
+            <section class="hero-card">
+                <div class="hero-headline">
+                    <div class="hero-labels">
+                        <span class="hero-chip">Panel de formularios</span>
+                        <span class="hero-chip alt"><?= labc_e($activeSection['nav_label']) ?> destacado</span>
+                    </div>
+
+                    <h1>Formularios de Laboratorio</h1>
+                    <p>Seleccione el tipo de análisis a realizar para las muestras recibidas.</p>
+                </div>
+
+                <div class="hero-stats">
+                    <span class="hero-stat">
+                        <strong><?= (int) ($sectionCounts['suelos'] ?? 0) ?></strong>
+                        <small>Suelos</small>
+                    </span>
+                    <span class="hero-stat">
+                        <strong><?= (int) ($sectionCounts['aguas'] ?? 0) ?></strong>
+                        <small>Aguas</small>
+                    </span>
+                    <span class="hero-stat">
+                        <strong><?= (int) ($sectionCounts['foliares'] ?? 0) ?></strong>
+                        <small>Foliares</small>
+                    </span>
+                    <span class="hero-stat">
+                        <strong><?= (int) ($sectionCounts['cana'] ?? 0) ?></strong>
+                        <small>Caña</small>
+                    </span>
                 </div>
             </section>
-        <?php endif; ?>
 
-        <?php if (!empty($suelosFisicos) || !empty($suelosQuimicos)): ?>
-            <section class="form-section">
-                <h2 class="section-title">Formularios de Suelos</h2>
-                <p class="subtitulo">Selecciona el análisis a registrar</p>
+            <div class="content-stack">
+                <?php foreach ($displaySections as $section): ?>
+                    <section
+                        class="form-section <?= $activeArea === $section['id'] ? 'is-active' : '' ?>"
+                        id="section-<?= labc_e($section['id']) ?>"
+                        data-section="<?= labc_e($section['id']) ?>"
+                        data-label="<?= labc_e($section['nav_label']) ?>">
+                        <div class="section-head">
+                            <div>
+                                <p class="section-kicker">Formularios de <?= labc_e($section['nav_label']) ?></p>
+                                <h2><?= labc_e($section['title']) ?></h2>
+                                <p class="section-copy"><?= labc_e($section['subtitle']) ?></p>
+                            </div>
 
-                <?php if (!empty($suelosFisicos)): ?>
-                    <h3>Físicos</h3>
-                    <div class="card-grid">
-                        <?php labc_render_cards($suelosFisicos); ?>
-                    </div>
-                <?php endif; ?>
+                            <?php if ($section['history_url'] !== null): ?>
+                                <a class="history-btn" href="<?= labc_e($section['history_url']) ?>">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <span>Ver historial</span>
+                                </a>
+                            <?php else: ?>
+                                <span class="history-btn disabled" aria-disabled="true">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <span>Ver historial</span>
+                                </span>
+                            <?php endif; ?>
+                        </div>
 
-                <?php if (!empty($suelosQuimicos)): ?>
-                    <h3>Químicos</h3>
-                    <div class="card-grid">
-                        <?php labc_render_cards($suelosQuimicos); ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (lab_can_analysis('suelos.boro') || lab_can_analysis('suelos.azufre') || lab_can_analysis('suelos.fosforo')): ?>
-                    <div class="history-links">
-                        <?php if (lab_can_analysis('suelos.boro')): ?>
-                            <a href="../controllers/Suelos/historial_boro_controller.php">Ver historial de boro</a>
+                        <?php if (!empty($section['groups'])): ?>
+                            <?php foreach ($section['groups'] as $group): ?>
+                                <div class="group-block">
+                                    <div class="group-title"><?= labc_e($group['title']) ?></div>
+                                    <div class="card-grid">
+                                        <?php foreach ($group['cards'] as $card): ?>
+                                            <?php
+                                                $cardClasses = ['module-card', 'theme-' . $section['theme']];
+                                                if (!empty($card['active'])) {
+                                                    $cardClasses[] = 'active';
+                                                }
+                                                if (!empty($card['ghost'])) {
+                                                    $cardClasses[] = 'ghost';
+                                                }
+                                                $cardClassAttr = implode(' ', $cardClasses);
+                                                $search = labc_e($card['search']);
+                                            ?>
+                                            <?php if (!empty($card['ghost'])): ?>
+                                                <div
+                                                    class="<?= labc_e($cardClassAttr) ?>"
+                                                    data-search="<?= $search ?>">
+                                                    <span class="module-card-icon">
+                                                        <i class="fa-solid <?= labc_e($card['icon']) ?>"></i>
+                                                    </span>
+                                                    <span class="module-card-label"><?= labc_e($card['label']) ?></span>
+                                                </div>
+                                            <?php else: ?>
+                                                <a
+                                                    class="<?= labc_e($cardClassAttr) ?>"
+                                                    href="<?= labc_e($card['href']) ?>"
+                                                    data-search="<?= $search ?>"
+                                                    aria-current="<?= !empty($card['active']) ? 'page' : 'false' ?>">
+                                                    <span class="module-card-icon">
+                                                        <i class="fa-solid <?= labc_e($card['icon']) ?>"></i>
+                                                    </span>
+                                                    <span class="module-card-label"><?= labc_e($card['label']) ?></span>
+                                                </a>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="card-grid">
+                                <?php foreach ($section['cards'] as $card): ?>
+                                    <?php
+                                        $cardClasses = ['module-card', 'theme-' . $section['theme']];
+                                        if (!empty($card['active'])) {
+                                            $cardClasses[] = 'active';
+                                        }
+                                        if (!empty($card['ghost'])) {
+                                            $cardClasses[] = 'ghost';
+                                        }
+                                        $cardClassAttr = implode(' ', $cardClasses);
+                                        $search = labc_e($card['search']);
+                                    ?>
+                                    <?php if (!empty($card['ghost'])): ?>
+                                        <div
+                                            class="<?= labc_e($cardClassAttr) ?>"
+                                            data-search="<?= $search ?>">
+                                            <span class="module-card-icon">
+                                                <i class="fa-solid <?= labc_e($card['icon']) ?>"></i>
+                                            </span>
+                                            <span class="module-card-label"><?= labc_e($card['label']) ?></span>
+                                        </div>
+                                    <?php else: ?>
+                                        <a
+                                            class="<?= labc_e($cardClassAttr) ?>"
+                                            href="<?= labc_e($card['href']) ?>"
+                                            data-search="<?= $search ?>"
+                                            aria-current="<?= !empty($card['active']) ? 'page' : 'false' ?>">
+                                            <span class="module-card-icon">
+                                                <i class="fa-solid <?= labc_e($card['icon']) ?>"></i>
+                                            </span>
+                                            <span class="module-card-label"><?= labc_e($card['label']) ?></span>
+                                        </a>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endif; ?>
-                        <?php if (lab_can_analysis('suelos.azufre')): ?>
-                            <a href="../controllers/Suelos/historial_azufre_controller.php">Ver historial de azufre</a>
-                        <?php endif; ?>
-                        <?php if (lab_can_analysis('suelos.fosforo')): ?>
-                            <a href="../controllers/Suelos/historial_fosforo_controller.php">Ver historial de fósforo</a>
-                        <?php endif; ?>
-                    </div>
+                    </section>
+                <?php endforeach; ?>
+
+                <?php if (!empty($utilityCards)): ?>
+                    <section class="form-section utility-section">
+                        <div class="section-head">
+                            <div>
+                                <p class="section-kicker">Herramientas internas</p>
+                                <h2>Gestión adicional</h2>
+                                <p class="section-copy">Accesos rápidos para consolidación y controles generales.</p>
+                            </div>
+                        </div>
+
+                        <div class="card-grid compact">
+                            <?php foreach ($utilityCards as $card): ?>
+                                <a
+                                    class="module-card theme-utility"
+                                    href="<?= labc_e($card['href']) ?>"
+                                    data-search="<?= labc_e($card['search']) ?>">
+                                    <span class="module-card-icon">
+                                        <i class="fa-solid <?= labc_e($card['icon']) ?>"></i>
+                                    </span>
+                                    <span class="module-card-label"><?= labc_e($card['label']) ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
                 <?php endif; ?>
-            </section>
-        <?php endif; ?>
 
-        <?php if (!empty($foliares)): ?>
-            <section class="form-section">
-                <h2 class="section-title">Formularios de Foliares</h2>
-                <p class="subtitulo">Selecciona el análisis a registrar</p>
-                <div class="card-grid">
-                    <?php labc_render_cards($foliares); ?>
-                </div>
-                <?php if (lab_can_analysis('foliares.fosforo')): ?>
-                    <div class="history-links">
-                        <a href="../controllers/Foliares/historial_fosforo_controller.php">Ver historial de fósforo</a>
+                <section class="no-results" id="noResults" hidden>
+                    <div class="no-results-card">
+                        <div class="no-results-icon">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <h3>No se encontraron formularios</h3>
+                        <p>Prueba con otro nombre o limpia la búsqueda para volver a ver todas las opciones.</p>
                     </div>
-                <?php endif; ?>
-            </section>
-        <?php endif; ?>
+                </section>
+            </div>
 
-        <?php if (!empty($aguas)): ?>
-            <section class="form-section">
-                <h2 class="section-title">Formularios de Aguas</h2>
-                <p class="subtitulo">Selecciona el análisis a registrar</p>
-                <div class="card-grid">
-                    <?php labc_render_cards($aguas); ?>
-                </div>
-                <?php if (lab_can_analysis('aguas.fosforo')): ?>
-                    <div class="history-links">
-                        <a href="../controllers/Aguas/historial_fosforo_controller.php">Ver historial de fósforo</a>
-                    </div>
-                <?php endif; ?>
-            </section>
-        <?php endif; ?>
+            <a class="floating-action" href="menu_solicitud.php" aria-label="Nueva solicitud">
+                <i class="fa-solid fa-plus"></i>
+            </a>
+        </main>
+    </div>
 
-        <?php if (!empty($cana)): ?>
-            <section class="form-section">
-                <h2 class="section-title">Formularios de Caña</h2>
-                <p class="subtitulo">Selecciona el análisis a registrar</p>
-                <div class="card-grid">
-                    <?php labc_render_cards($cana); ?>
-                </div>
-            </section>
-        <?php endif; ?>
+    <script>
+    (function () {
+        const searchInput = document.getElementById('formSearch');
+        const sections = Array.from(document.querySelectorAll('.form-section'));
+        const noResults = document.getElementById('noResults');
 
-        <?php if (!empty($mieles)): ?>
-            <section class="form-section">
-                <h2 class="section-title">Formularios de Mieles</h2>
-                <p class="subtitulo">Selecciona el análisis a registrar</p>
-                <div class="card-grid">
-                    <?php labc_render_cards($mieles); ?>
-                </div>
-            </section>
-        <?php endif; ?>
+        function filterCards() {
+            const query = (searchInput.value || '').trim().toLowerCase();
+            let visibleCards = 0;
 
-        <?php if (!$canBlancoControl && !$canConsolidacion && empty($suelosFisicos) && empty($suelosQuimicos) && empty($foliares) && empty($aguas) && empty($cana) && empty($mieles)): ?>
-            <section class="form-section">
-                <h2 class="section-title">Sin permisos asignados</h2>
-                <p class="subtitulo">Tu usuario tiene acceso al módulo, pero no tiene permisos internos configurados para Laboratorio.</p>
-            </section>
-        <?php endif; ?>
-    </main>
+            sections.forEach((section) => {
+                const cards = Array.from(section.querySelectorAll('.module-card'));
+                let sectionVisible = false;
+
+                cards.forEach((card) => {
+                    const text = (card.dataset.search || card.textContent || '').toLowerCase();
+                    const match = !query || text.includes(query);
+                    card.hidden = !match;
+                    if (match) {
+                        sectionVisible = true;
+                        visibleCards += 1;
+                    }
+                });
+
+                section.hidden = !sectionVisible;
+            });
+
+            noResults.hidden = visibleCards !== 0;
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterCards);
+            filterCards();
+        }
+    })();
+    </script>
 </body>
 </html>
-
