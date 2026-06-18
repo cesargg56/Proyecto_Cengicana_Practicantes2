@@ -172,7 +172,7 @@ function lab_is_technician(): bool
 
 function lab_can_view_error_forms(): bool
 {
-    return lab_can('laboratorio.consolidacion.ver') || lab_is_technician();
+    return lab_can('laboratorio.formularios_erroneos.ver') || lab_can('laboratorio.consolidacion.ver') || lab_is_technician();
 }
 
 function lab_has_module_access(string $module = 'Laboratorio'): bool
@@ -199,6 +199,8 @@ function lab_all_permissions(): array
         'laboratorio.solicitudes.crear',
         'laboratorio.solicitudes.editar',
         'laboratorio.lotes.ver',
+        'laboratorio.labc.ver',
+        'laboratorio.formularios_labc.ver',
         'laboratorio.analisis.ver',
         'laboratorio.analisis.crear',
         'laboratorio.analisis.editar',
@@ -207,6 +209,10 @@ function lab_all_permissions(): array
         'laboratorio.blanco_control.gestionar',
         'laboratorio.consolidacion.ver',
         'laboratorio.consolidacion.aprobar',
+        'laboratorio.formularios_pendientes.ver',
+        'laboratorio.formularios_erroneos.ver',
+        'laboratorio.formularios.guardar_corregidos',
+        'laboratorio.formularios.guardar_errores',
         'laboratorio.usuarios.gestionar',
         'laboratorio.roles.gestionar',
         'laboratorio.configuracion.gestionar',
@@ -238,15 +244,20 @@ function lab_default_permissions_for_role(): array
     if ($roleId === 3 || strpos($role, 'tecnico') !== false) {
         return [
             'laboratorio.acceder',
+            'laboratorio.labc.ver',
+            'laboratorio.formularios_labc.ver',
             'laboratorio.analisis.ver',
             'laboratorio.analisis.crear',
             'laboratorio.analisis.editar',
+            'laboratorio.formularios_pendientes.ver',
         ];
     }
 
     if ($roleId === 4 || strpos($role, 'analista') !== false || strpos($role, 'laboratorista') !== false) {
         return [
             'laboratorio.acceder',
+            'laboratorio.labc.ver',
+            'laboratorio.formularios_labc.ver',
             'laboratorio.analisis.ver',
             'laboratorio.analisis.crear',
             'laboratorio.analisis.editar',
@@ -260,9 +271,14 @@ function lab_default_permissions_for_role(): array
             'laboratorio.solicitudes.crear',
             'laboratorio.solicitudes.editar',
             'laboratorio.lotes.ver',
+            'laboratorio.labc.ver',
+            'laboratorio.formularios_labc.ver',
             'laboratorio.analisis.ver',
             'laboratorio.consolidacion.ver',
             'laboratorio.consolidacion.aprobar',
+            'laboratorio.formularios_erroneos.ver',
+            'laboratorio.formularios.guardar_corregidos',
+            'laboratorio.formularios.guardar_errores',
         ];
     }
 
@@ -313,7 +329,7 @@ function lab_analysis_assignments(): ?array
 
 function lab_can_analysis(string $analysisKey): bool
 {
-    if (!lab_can('laboratorio.analisis.ver')) {
+    if (!lab_can('laboratorio.formularios_labc.ver') && !lab_can('laboratorio.analisis.ver')) {
         return false;
     }
 

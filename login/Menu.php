@@ -343,7 +343,7 @@ $icono = "apps";
 if (trim(strtolower($modulo)) == "cursos") {
     $ruta = "../cengicursos/index.php";
     $icono = "school";
- } elseif (trim(strtolower($modulo)) == "laboratorio") {
+ } elseif (in_array(trim(strtolower($modulo)), ["laboratorio", "laboratorios"], true)) {
     $ruta = "../Laboratorio/index.php";
     $icono = "science";
 } elseif ($_SESSION['es_superadmin']) {
@@ -382,7 +382,7 @@ if (trim(strtolower($modulo)) == "cursos") {
     if (trim(strtolower($modulo)) == "solicitud de visitas") {
         $ruta = "../Pruebas/public/admin/dashboard_unificado.php?modulo=solicitudes";
     } else {
-        $ruta = "../Pruebas/public/admin/dashboard_unificado.php?modulo=solicitudes";
+        $ruta = "#";
     }
 }
 
@@ -588,6 +588,8 @@ $ruta = "#";
 
 if (trim(strtolower($modulo)) == "cursos") {
     $ruta = "../cengicursos/index.php";
+} elseif (in_array(trim(strtolower($modulo)), ["laboratorio", "laboratorios"], true)) {
+    $ruta = "../Laboratorio/index.php";
 } elseif ($_SESSION['es_superadmin']) {
 
     if ($modulo == "Solicitud de visitas") {
@@ -618,7 +620,7 @@ if (trim(strtolower($modulo)) == "cursos") {
     if (trim(strtolower($modulo)) == "solicitud de visitas") {
         $ruta = "../Pruebas/public/admin/dashboard_unificado.php?modulo=solicitudes";
     } else {
-        $ruta = "../Pruebas/public/admin/dashboard_unificado.php?modulo=solicitudes";
+        $ruta = "#";
     }
 }
 

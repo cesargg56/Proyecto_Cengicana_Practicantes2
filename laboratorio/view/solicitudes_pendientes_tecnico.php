@@ -4,8 +4,8 @@ require_once __DIR__ . '/../conexion.php';
 
 lab_require_module_access();
 
-if (!lab_is_technician()) {
-    lab_forbidden('Este apartado solo esta disponible para tecnicos.');
+if (!lab_can('laboratorio.formularios_pendientes.ver') && !lab_is_technician()) {
+    lab_forbidden('No tiene permisos para ver formularios pendientes.');
 }
 
 $stmt = $conexion->query("
