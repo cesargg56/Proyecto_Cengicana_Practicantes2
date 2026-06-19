@@ -111,6 +111,16 @@ function setTipoFormulario(tipo) {
   if (input) input.value = tipo;
 }
 
+function getTipoFormularioPorDefecto() {
+  const activo = document.querySelector(".tipo-btn.active:not([disabled])");
+  if (activo?.dataset.tipo) return activo.dataset.tipo;
+
+  const primero = document.querySelector(".tipo-btn:not([disabled])");
+  if (primero?.dataset.tipo) return primero.dataset.tipo;
+
+  return "suelos";
+}
+
 function renderAnalisis(tipo) {
   const data = ANALISIS[tipo];
   const body = document.getElementById("analisis-body");
@@ -123,7 +133,7 @@ function renderAnalisis(tipo) {
     body.innerHTML = `
       <tr>
         <td colspan="3" class="center" style="padding:24px;color:#5b6f5e">
-          No hay anÃ¡lisis activos para este tipo de muestra.
+          No hay análisis activos para este tipo de muestra.
         </td>
       </tr>
     `;
@@ -269,7 +279,7 @@ function initTipoButtons() {
 
   tipoBtns.addEventListener("click", event => {
     const btn = event.target.closest(".tipo-btn");
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
 
     document.querySelectorAll(".tipo-btn").forEach(item => item.classList.remove("active"));
     btn.classList.add("active");
@@ -301,16 +311,16 @@ function initTipoDesdeQuery() {
   };
   const qOriginal = params.get("tipo");
   const q = aliasTipos[qOriginal] || qOriginal;
+  const btn = q ? document.querySelector(`.tipo-btn[data-tipo="${q}"]`) : null;
 
-  if (!q || !ANALISIS[q]) {
-    renderAnalisis("suelos");
+  if (!q || !ANALISIS[q] || !btn || btn.disabled) {
+    renderAnalisis(getTipoFormularioPorDefecto());
     return;
   }
 
   const tiposCont = document.getElementById("tipo-btns");
   if (tiposCont) tiposCont.style.display = "none";
 
-  const btn = document.querySelector(`.tipo-btn[data-tipo="${q}"]`);
   if (btn) {
     document.querySelectorAll(".tipo-btn").forEach(item => item.classList.remove("active"));
     btn.classList.add("active");

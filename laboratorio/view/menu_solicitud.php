@@ -1,10 +1,13 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../includes/catalogo_muestras_helper.php';
 
 lab_require_permission('laboratorio.solicitudes.crear');
 
 $loteSeleccionado = trim((string) ($_GET['lote'] ?? ''));
 $currentUser = lab_current_user();
+$catalogoMuestras = labCatalogoMuestrasFormularioData($conexion, true);
 
 function menuSolicitudUrl(string $tipo, string $lote): string
 {
@@ -38,44 +41,26 @@ function menuSolicitudAvatar(array $user): string
 $menuSolicitudAvatar = menuSolicitudAvatar($currentUser);
 $newRequestHref = 'menu_solicitud.php' . ($loteSeleccionado !== '' ? '?lote=' . rawurlencode($loteSeleccionado) : '');
 
-$sampleCards = [
-    [
-        'type' => 'suelo-fisico',
-        'title' => 'Suelos',
-        'subtitle' => 'Análisis físico químico',
-        'icon' => 'fa-mountain',
-        'accent' => 'suelos',
-    ],
-    [
-        'type' => 'foliares',
-        'title' => 'Foliares',
-        'subtitle' => 'Tejido vegetal y nutrición',
-        'icon' => 'fa-leaf',
-        'accent' => 'foliares',
-    ],
-    [
-        'type' => 'cana',
-        'title' => 'Caña',
-        'subtitle' => 'Rendimiento y sacarosa',
-        'icon' => 'fa-tractor',
-        'accent' => 'cana',
-    ],
-    [
-        'type' => 'miel',
-        'title' => 'Miel',
-        'subtitle' => 'Pureza y componentes',
-        'icon' => 'fa-mug-hot',
-        'accent' => 'miel',
-    ],
-    [
-        'type' => 'agua',
-        'title' => 'Agua',
-        'subtitle' => 'Calidad de riego y consumo',
-        'icon' => 'fa-droplet',
-        'accent' => 'agua',
-        'wide' => true,
-    ],
+$sampleVisuals = [
+    'suelos' => ['icon' => 'fa-mountain', 'subtitle' => 'Análisis físico químico', 'accent' => 'suelos'],
+    'foliares' => ['icon' => 'fa-leaf', 'subtitle' => 'Tejido vegetal y nutrición', 'accent' => 'foliares'],
+    'cana' => ['icon' => 'fa-tractor', 'subtitle' => 'Rendimiento y sacarosa', 'accent' => 'cana'],
+    'miel' => ['icon' => 'fa-mug-hot', 'subtitle' => 'Pureza y componentes', 'accent' => 'miel'],
+    'agua' => ['icon' => 'fa-droplet', 'subtitle' => 'Calidad de riego y consumo', 'accent' => 'agua', 'wide' => true],
 ];
+
+$sampleCards = [];
+foreach ($catalogoMuestras as $clave => $muestra) {
+    $meta = $sampleVisuals[$clave] ?? ['icon' => 'fa-vial', 'subtitle' => 'Registro de muestra', 'accent' => 'suelos'];
+    $sampleCards[] = [
+        'type' => $clave,
+        'title' => (string) ($muestra['nombre'] ?? $muestra['label'] ?? ucfirst($clave)),
+        'subtitle' => $meta['subtitle'],
+        'icon' => $meta['icon'],
+        'accent' => $meta['accent'],
+        'wide' => !empty($meta['wide']),
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">

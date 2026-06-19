@@ -484,6 +484,12 @@ if ($canAnalisis) {
         'label' => 'Catálogo de análisis',
         'icon' => 'fa-table-list',
     ];
+    $utilityCards[] = [
+        'key' => 'muestras.catalogo',
+        'href' => '../catalogo_muestras.php',
+        'label' => 'Catálogo de muestras',
+        'icon' => 'fa-vials',
+    ];
 }
 $utilityCards = labc_prepare_cards($utilityCards, 'consolidacion');
 
