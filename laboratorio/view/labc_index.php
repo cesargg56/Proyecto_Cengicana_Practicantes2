@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../conexion.php';
 
 lab_require_module_access();
 
@@ -120,315 +119,75 @@ function labc_history_href(string $area): ?string
     }
 }
 
-function getSampleTypeKey(string $nombre): string
-{
-    $normalized = strtolower(trim($nombre));
-    $map = [
-        'suelos' => 'suelos',
-        'suelo' => 'suelos',
-        'cañas' => 'cana',
-        'caña' => 'cana',
-        'cana' => 'cana',
-        'mieles' => 'mieles',
-        'miel' => 'mieles',
-        'agua' => 'aguas',
-        'aguas' => 'aguas',
-        'foliares' => 'foliares',
-        'foliar' => 'foliares',
-    ];
-    return $map[$normalized] ?? $normalized;
-}
-
-function get_analysis_info(string $sampleTypeKey, string $dbAnalysisName): ?array
-{
-    $norm = strtolower(trim($dbAnalysisName));
-    $norm = str_replace(
-        ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'Ã¡', 'Ã©', 'Ã­', 'Ã³', 'Ãº', 'Ã±', 'â‚ƒ', 'Â', 'º', '%'],
-        ['a', 'e', 'i', 'o', 'u', 'n', 'a', 'e', 'i', 'o', 'u', 'n', '3', '', '', ''],
-        $norm
-    );
-    $norm = preg_replace('/\s+/', ' ', $norm);
-
-    $key = null;
-    $label = null;
-    $filename = null;
-
-    if ($sampleTypeKey === 'suelos') {
-        if (strpos($norm, 'textura') !== false) {
-            $key = 'suelos.textura';
-            $label = 'Textura';
-            $filename = 'textura_controller.php';
-        } elseif (strpos($norm, 'residual') !== false) {
-            $key = 'suelos.humedad_residual';
-            $label = 'Humedad residual';
-            $filename = 'humedad_residual_controller.php';
-        } elseif (strpos($norm, 'humedad') !== false) {
-            $key = 'suelos.humedad';
-            $label = 'Humedad';
-            $filename = 'humedad_controller.php';
-        } elseif (strpos($norm, 'dap') !== false || strpos($norm, 'densidad aparente') !== false) {
-            $key = 'suelos.dap';
-            $label = 'Densidad aparente (DAP)';
-            $filename = 'dap_controller.php';
-        } elseif (strpos($norm, 'capacidad de campo') !== false || $norm === 'cc') {
-            $key = 'suelos.cc';
-            $label = 'Capacidad de Campo';
-            $filename = 'cc_controller.php';
-        } elseif (strpos($norm, 'marchitez') !== false || $norm === 'pmp') {
-            $key = 'suelos.pmp';
-            $label = 'Punto de Marchitez Permanente';
-            $filename = 'pmp_controller.php';
-        } elseif ($norm === 'ph') {
-            $key = 'suelos.ph';
-            $label = 'pH';
-            $filename = 'ph_controller.php';
-        } elseif (strpos($norm, 'cic') !== false && strpos($norm, 'macronutrientes') !== false) {
-            $key = 'suelos.macroscic';
-            $label = 'Macronutrientes y CIC';
-            $filename = 'macroscic_controller.php';
-        } elseif (strpos($norm, 'cic') !== false) {
-            $key = 'suelos.cic';
-            $label = 'CIC';
-            $filename = 'cic_controller.php';
-        } elseif (strpos($norm, 'materia organica') !== false || $norm === 'mo') {
-            $key = 'suelos.mo';
-            $label = '%MO';
-            $filename = 'mo_controller.php';
-        } elseif (strpos($norm, 'micro') !== false) {
-            $key = 'suelos.micros';
-            $label = 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)';
-            $filename = 'micros_controller.php';
-        } elseif (strpos($norm, 'nitrogeno') !== false) {
-            $key = 'suelos.nitrogeno';
-            $label = 'Nitrógeno';
-            $filename = 'nitrogeno_controller.php';
-        } elseif (strpos($norm, 'boro') !== false) {
-            $key = 'suelos.boro';
-            $label = 'Boro';
-            $filename = 'boro_controller.php';
-        } elseif (strpos($norm, 'azufre') !== false) {
-            $key = 'suelos.azufre';
-            $label = 'Azufre';
-            $filename = 'azufre_controller.php';
-        } elseif (strpos($norm, 'fosforo') !== false) {
-            $key = 'suelos.fosforo';
-            $label = 'Fósforo';
-            $filename = 'fosforo_controller.php';
-        }
-    } elseif ($sampleTypeKey === 'aguas') {
-        if (strpos($norm, 'macronutrientes') !== false || $norm === 'macros') {
-            $key = 'aguas.macros';
-            $label = 'Macronutrientes';
-            $filename = 'macros_controller.php';
-        } elseif (strpos($norm, 'ras') !== false) {
-            $key = 'aguas.ras';
-            $label = 'RAS';
-            $filename = 'ras_controller.php';
-        } elseif (strpos($norm, 'boro') !== false) {
-            $key = 'aguas.boro';
-            $label = 'Boro';
-            $filename = 'boro_controller.php';
-        } elseif ($norm === 'ph') {
-            $key = 'aguas.ph';
-            $label = 'pH';
-            $filename = 'ph_controller.php';
-        } elseif (strpos($norm, 'salinidad') !== false) {
-            $key = 'aguas.salinidad';
-            $label = 'Salinidad';
-            $filename = 'salinidad_controller.php';
-        } elseif (strpos($norm, 'dureza') !== false) {
-            $key = 'aguas.dureza';
-            $label = 'Dureza';
-            $filename = 'dureza_controller.php';
-        } elseif (strpos($norm, 'carbonato') !== false && strpos($norm, 'bi') === false) {
-            $key = 'aguas.carbonatos';
-            $label = 'Carbonatos';
-            $filename = 'carbonatos_controller.php';
-        } elseif (strpos($norm, 'bicarbonato') !== false) {
-            $key = 'aguas.bicarbonato';
-            $label = 'Bicarbonatos';
-            $filename = 'bicarbonato_controller.php';
-        } elseif (strpos($norm, 'micro') !== false) {
-            $key = 'aguas.micros';
-            $label = 'Micro Nutrientes (Cu, Zn, Fe, Mn)';
-            $filename = 'micros_controller.php';
-        } elseif (strpos($norm, 'fosforo') !== false) {
-            $key = 'aguas.fosforo';
-            $label = 'Fósforo';
-            $filename = 'fosforo_controller.php';
-        } elseif (strpos($norm, 'conductividad') !== false || $norm === 'ce') {
-            $key = 'aguas.conductividad';
-            $label = 'Conductividad Eléctrica';
-            $filename = 'conductividad_controller.php';
-        } elseif (strpos($norm, 'solidos totales disueltos') !== false || $norm === 'tds' || $norm === 'std') {
-            $key = 'aguas.tds';
-            $label = 'TDS';
-            $filename = 'tds_controller.php';
-        } elseif (strpos($norm, 'resistividad') !== false) {
-            $key = 'aguas.resistividad';
-            $label = 'Resistividad';
-            $filename = 'resistividad_controller.php';
-        } elseif (strpos($norm, 'cloruro') !== false) {
-            $key = 'aguas.cloruros';
-            $label = 'Cloruros';
-            $filename = 'cloruros_controller.php';
-        } elseif (strpos($norm, 'alcalinidad') !== false) {
-            $key = 'aguas.alcanilidad';
-            $label = 'Alcalinidad';
-            $filename = 'alcanilidad_controller.php';
-        }
-    } elseif ($sampleTypeKey === 'foliares') {
-        if (strpos($norm, 'macronutrientes') !== false || $norm === 'macros') {
-            $key = 'foliares.macros';
-            $label = 'Macronutrientes';
-            $filename = 'macros_controller.php';
-        } elseif (strpos($norm, 'nitrogeno') !== false) {
-            $key = 'foliares.nitrogeno';
-            $label = 'Nitrogeno';
-            $filename = 'nitrogeno_controller.php';
-        } elseif (strpos($norm, 'boro') !== false) {
-            $key = 'foliares.boro';
-            $label = 'Boro';
-            $filename = 'boro_controller.php';
-        } elseif (strpos($norm, 'micro') !== false) {
-            $key = 'foliares.micros';
-            $label = 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)';
-            $filename = 'micros_controller.php';
-        } elseif (strpos($norm, 'fosforo') !== false) {
-            $key = 'foliares.fosforo';
-            $label = 'Fósforo';
-            $filename = 'fosforo_controller.php';
-        }
-    } elseif ($sampleTypeKey === 'cana') {
-        if (strpos($norm, 'peso seco') !== false) {
-            $key = 'cana.peso_seco';
-            $label = 'Peso seco';
-            $filename = 'peso_seco_controller.php';
-        } elseif (strpos($norm, 'fibra') !== false) {
-            $key = 'cana.fibra';
-            $label = 'Fibra';
-            $filename = 'fibra_controller.php';
-        } elseif (strpos($norm, 'humedad') !== false) {
-            $key = 'cana.humedad';
-            $label = '% de Humedad';
-            $filename = 'humedad_controller.php';
-        } elseif (strpos($norm, 'brix') !== false || strpos($norm, 'pol') !== false || strpos($norm, 'pureza') !== false) {
-            $key = 'cana.brixpol';
-            $label = 'Determinación de Brix y Pol';
-            $filename = 'brixpol_controller.php';
-        }
-    } elseif ($sampleTypeKey === 'mieles') {
-        if (strpos($norm, 'brix') !== false) {
-            $key = 'mieles.brix';
-            $label = 'Brix';
-            $filename = 'brix_controller.php';
-        }
-    }
-
-    if ($key !== null) {
-        $folder = ucfirst($sampleTypeKey);
-        return [
-            'key' => $key,
-            'label' => $label,
-            'href' => "../controllers/{$folder}/{$filename}"
-        ];
-    }
-
-    // Default fallback: slugify name
-    $slug = preg_replace('/[^a-z0-9]+/', '_', strtolower(trim($dbAnalysisName)));
-    $slug = trim($slug, '_');
-    $folder = ucfirst($sampleTypeKey);
-    return [
-        'key' => "{$sampleTypeKey}.{$slug}",
-        'label' => $dbAnalysisName,
-        'href' => "../controllers/{$folder}/{$slug}_controller.php"
-    ];
-}
-
-// Fetch Sample Types from database
-$stmtMuestras = $conexion->query("SELECT id_tipo, nombre FROM tipo_muestra ORDER BY id_tipo");
-$dbMuestras = $stmtMuestras->fetchAll(PDO::FETCH_ASSOC);
-
-$sampleTypeKeys = [];
-$sampleTypesByKey = [];
-
-foreach ($dbMuestras as $dbMuestra) {
-    $key = getSampleTypeKey($dbMuestra['nombre']);
-    $sampleTypeKeys[] = $key;
-    $sampleTypesByKey[$key] = [
-        'id_tipo' => $dbMuestra['id_tipo'],
-        'nombre' => $dbMuestra['nombre'],
-    ];
-}
+$sampleTypeKeys = ['suelos', 'aguas', 'foliares', 'cana', 'mieles'];
 
 $activeArea = trim((string) ($_GET['area'] ?? 'aguas'));
 if (!in_array($activeArea, $sampleTypeKeys, true)) {
-    $activeArea = in_array('aguas', $sampleTypeKeys, true) ? 'aguas' : ($sampleTypeKeys[0] ?? 'aguas');
+    $activeArea = 'aguas';
 }
 
-// Fetch Analyses from database
-$stmtAnalisis = $conexion->query("SELECT id_tipo, id_tipo_muestra, nombre FROM tipo_analisis ORDER BY id_tipo");
-$dbAnalisis = $stmtAnalisis->fetchAll(PDO::FETCH_ASSOC);
+$suelosFisicos = labc_visible_analysis([
+    ['key' => 'suelos.textura', 'href' => '../controllers/Suelos/textura_controller.php', 'label' => 'Textura'],
+    ['key' => 'suelos.humedad', 'href' => '../controllers/Suelos/humedad_controller.php', 'label' => 'Humedad'],
+    ['key' => 'suelos.humedad_residual', 'href' => '../controllers/Suelos/humedad_residual_controller.php', 'label' => 'Humedad residual'],
+    ['key' => 'suelos.dap', 'href' => '../controllers/Suelos/dap_controller.php', 'label' => 'Densidad aparente (DAP)'],
+    ['key' => 'suelos.cc', 'href' => '../controllers/Suelos/cc_controller.php', 'label' => 'Capacidad de Campo'],
+    ['key' => 'suelos.pmp', 'href' => '../controllers/Suelos/pmp_controller.php', 'label' => 'Punto de Marchitez Permanente'],
+]);
 
-$analysesBySampleTypeId = [];
-foreach ($dbAnalisis as $analisis) {
-    $idMuestra = $analisis['id_tipo_muestra'];
-    if (!isset($analysesBySampleTypeId[$idMuestra])) {
-        $analysesBySampleTypeId[$idMuestra] = [];
-    }
-    $analysesBySampleTypeId[$idMuestra][] = $analisis;
-}
-
-$analysesBySampleTypeKey = [];
-foreach ($sampleTypesByKey as $key => $sampleType) {
-    $idMuestra = $sampleType['id_tipo'];
-    $dbAnalisisList = $analysesBySampleTypeId[$idMuestra] ?? [];
-    
-    $analysesBySampleTypeKey[$key] = [];
-    foreach ($dbAnalisisList as $dbAnalisisItem) {
-        $info = get_analysis_info($key, $dbAnalisisItem['nombre']);
-        if ($info) {
-            $analysesBySampleTypeKey[$key][] = $info;
-        }
-    }
-}
-
-// Suelos group division
-$suelosFisicos = [];
-$suelosQuimicos = [];
-$suelosAnalyses = $analysesBySampleTypeKey['suelos'] ?? [];
-foreach ($suelosAnalyses as $analisis) {
-    if (in_array($analisis['key'], [
-        'suelos.textura',
-        'suelos.humedad',
-        'suelos.humedad_residual',
-        'suelos.dap',
-        'suelos.cc',
-        'suelos.pmp'
-    ], true)) {
-        $suelosFisicos[] = $analisis;
-    } else {
-        $suelosQuimicos[] = $analisis;
-    }
-}
-
-$suelosFisicos = labc_visible_analysis($suelosFisicos);
-$suelosQuimicos = labc_visible_analysis($suelosQuimicos);
+$suelosQuimicos = labc_visible_analysis([
+    ['key' => 'suelos.ph', 'href' => '../controllers/Suelos/ph_controller.php', 'label' => 'pH'],
+    ['key' => 'suelos.mo', 'href' => '../controllers/Suelos/mo_controller.php', 'label' => '%MO'],
+    ['key' => 'suelos.macroscic', 'href' => '../controllers/Suelos/macroscic_controller.php', 'label' => 'Macronutrientes y CIC'],
+    ['key' => 'suelos.micros', 'href' => '../controllers/Suelos/micros_controller.php', 'label' => 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)'],
+    ['key' => 'suelos.nitrogeno', 'href' => '../controllers/Suelos/nitrogeno_controller.php', 'label' => 'Nitrógeno'],
+    ['key' => 'suelos.boro', 'href' => '../controllers/Suelos/boro_controller.php', 'label' => 'Boro'],
+    ['key' => 'suelos.azufre', 'href' => '../controllers/Suelos/azufre_controller.php', 'label' => 'Azufre'],
+    ['key' => 'suelos.fosforo', 'href' => '../controllers/Suelos/fosforo_controller.php', 'label' => 'Fósforo'],
+]);
 
 $suelosCardsFisicos = labc_prepare_cards($suelosFisicos, 'suelos.textura');
 $suelosCardsQuimicos = labc_prepare_cards($suelosQuimicos, 'suelos.ph');
 
-// Other sections:
-$aguasAnalyses = labc_visible_analysis($analysesBySampleTypeKey['aguas'] ?? []);
+$aguasAnalyses = labc_visible_analysis([
+    ['key' => 'aguas.macros', 'href' => '../controllers/Aguas/macros_controller.php', 'label' => 'Macronutrientes'],
+    ['key' => 'aguas.ras', 'href' => '../controllers/Aguas/ras_controller.php', 'label' => 'RAS'],
+    ['key' => 'aguas.boro', 'href' => '../controllers/Aguas/boro_controller.php', 'label' => 'Boro'],
+    ['key' => 'aguas.ph', 'href' => '../controllers/Aguas/ph_controller.php', 'label' => 'pH'],
+    ['key' => 'aguas.salinidad', 'href' => '../controllers/Aguas/salinidad_controller.php', 'label' => 'Salinidad'],
+    ['key' => 'aguas.dureza', 'href' => '../controllers/Aguas/dureza_controller.php', 'label' => 'Dureza'],
+    ['key' => 'aguas.carbonatos', 'href' => '../controllers/Aguas/carbonatos_controller.php', 'label' => 'Carbonatos'],
+    ['key' => 'aguas.micros', 'href' => '../controllers/Aguas/micros_controller.php', 'label' => 'Micro Nutrientes (Cu, Zn, Fe, Mn)'],
+    ['key' => 'aguas.fosforo', 'href' => '../controllers/Aguas/fosforo_controller.php', 'label' => 'Fósforo'],
+    ['key' => 'aguas.conductividad', 'href' => '../controllers/Aguas/conductividad_controller.php', 'label' => 'Conductividad Eléctrica'],
+    ['key' => 'aguas.tds', 'href' => '../controllers/Aguas/tds_controller.php', 'label' => 'TDS'],
+    ['key' => 'aguas.resistividad', 'href' => '../controllers/Aguas/resistividad_controller.php', 'label' => 'Resistividad'],
+    ['key' => 'aguas.cloruros', 'href' => '../controllers/Aguas/cloruros_controller.php', 'label' => 'Cloruros'],
+    ['key' => 'aguas.alcanilidad', 'href' => '../controllers/Aguas/alcanilidad_controller.php', 'label' => 'Alcalinidad'],
+    ['key' => 'aguas.bicarbonato', 'href' => '../controllers/Aguas/bicarbonato_controller.php', 'label' => 'Bicarbonatos'],
+]);
 $aguasCards = labc_prepare_cards($aguasAnalyses, 'aguas.ph');
 
-$foliaresAnalyses = labc_visible_analysis($analysesBySampleTypeKey['foliares'] ?? []);
+$foliaresAnalyses = labc_visible_analysis([
+    ['key' => 'foliares.macros', 'href' => '../controllers/Foliares/macros_controller.php', 'label' => 'Macronutrientes'],
+    ['key' => 'foliares.nitrogeno', 'href' => '../controllers/Foliares/nitrogeno_controller.php', 'label' => 'Nitrógeno'],
+    ['key' => 'foliares.boro', 'href' => '../controllers/Foliares/boro_controller.php', 'label' => 'Boro'],
+    ['key' => 'foliares.micros', 'href' => '../controllers/Foliares/micros_controller.php', 'label' => 'Micro Nutrientes (Cu, Zn, Fe, Mn, K)'],
+    ['key' => 'foliares.fosforo', 'href' => '../controllers/Foliares/fosforo_controller.php', 'label' => 'Fósforo'],
+]);
 $foliaresCards = labc_prepare_cards($foliaresAnalyses, 'foliares.micros');
 
-$canaAnalyses = labc_visible_analysis($analysesBySampleTypeKey['cana'] ?? []);
+$canaAnalyses = labc_visible_analysis([
+    ['key' => 'cana.peso_seco', 'href' => '../controllers/Cana/peso_seco_controller.php', 'label' => 'Peso seco'],
+    ['key' => 'cana.fibra', 'href' => '../controllers/Cana/fibra_controller.php', 'label' => 'Fibra'],
+    ['key' => 'cana.humedad', 'href' => '../controllers/Cana/humedad_controller.php', 'label' => '% de Humedad'],
+    ['key' => 'cana.brixpol', 'href' => '../controllers/Cana/brixpol_controller.php', 'label' => 'Determinación de Brix y Pol'],
+]);
 $canaCards = labc_prepare_cards($canaAnalyses, 'cana.humedad');
 
-$mielesAnalyses = labc_visible_analysis($analysesBySampleTypeKey['mieles'] ?? []);
+$mielesAnalyses = labc_visible_analysis([
+    ['key' => 'mieles.brix', 'href' => '../controllers/Mieles/brix_controller.php', 'label' => 'Brix'],
+]);
 $mielesCards = labc_prepare_cards(array_merge($mielesAnalyses, [
     [
         'key' => 'mieles.proximos',
@@ -484,7 +243,6 @@ $sampleTypeConfigs = [
             ['title' => 'Químicos', 'cards' => $suelosCardsQuimicos],
         ],
         'count' => count($suelosCardsFisicos) + count($suelosCardsQuimicos),
-        'active_card' => 'suelos.ph',
     ],
     'aguas' => [
         'id' => 'aguas',
@@ -495,7 +253,6 @@ $sampleTypeConfigs = [
         'history_url' => labc_history_href('aguas'),
         'cards' => $aguasCards,
         'count' => count($aguasCards),
-        'active_card' => 'aguas.ph',
     ],
     'foliares' => [
         'id' => 'foliares',
@@ -506,7 +263,6 @@ $sampleTypeConfigs = [
         'history_url' => labc_history_href('foliares'),
         'cards' => $foliaresCards,
         'count' => count($foliaresCards),
-        'active_card' => 'foliares.micros',
     ],
     'cana' => [
         'id' => 'cana',
@@ -517,7 +273,6 @@ $sampleTypeConfigs = [
         'history_url' => labc_history_href('cana'),
         'cards' => $canaCards,
         'count' => count($canaCards),
-        'active_card' => 'cana.humedad',
     ],
     'mieles' => [
         'id' => 'mieles',
@@ -528,54 +283,20 @@ $sampleTypeConfigs = [
         'history_url' => null,
         'cards' => $mielesCards,
         'count' => count($mielesCards),
-        'active_card' => 'mieles.brix',
     ],
 ];
 
 $sections = [];
+$sectionsById = [];
 foreach ($sampleTypeKeys as $key) {
     if (isset($sampleTypeConfigs[$key])) {
-        $sections[] = $sampleTypeConfigs[$key];
-    } else {
-        // Fallback for new sample types added in the database
-        $dbName = $sampleTypesByKey[$key]['nombre'];
-        $dbAnalyses = labc_visible_analysis($analysesBySampleTypeKey[$key] ?? []);
-        $dbCards = labc_prepare_cards($dbAnalyses);
-        $sections[] = [
-            'id' => $key,
-            'nav_label' => ucfirst($dbName),
-            'title' => 'Formularios de ' . ucfirst($dbName),
-            'subtitle' => 'Seleccione el tipo de análisis a realizar.',
-            'theme' => $key,
-            'history_url' => labc_history_href($key),
-            'cards' => $dbCards,
-            'count' => count($dbCards),
-            'active_card' => null,
-        ];
+        $section = $sampleTypeConfigs[$key];
+        $sections[] = $section;
+        $sectionsById[$key] = $section;
     }
 }
 
-$sectionCounts = [];
-foreach ($sections as $section) {
-    $sectionCounts[$section['id']] = (int) $section['count'];
-}
-
-$visibleTotal = array_sum($sectionCounts);
-$activeSection = null;
-foreach ($sections as $section) {
-    if ($section['id'] === $activeArea) {
-        $activeSection = $section;
-        break;
-    }
-}
-if ($activeSection === null) {
-    $activeSection = $sections[0] ?? null;
-}
-
-$sectionsById = [];
-foreach ($sections as $section) {
-    $sectionsById[$section['id']] = $section;
-}
+$activeSection = $sectionsById[$activeArea] ?? ($sections[0] ?? null);
 
 $displayOrder = array_merge(
     [$activeArea],
