@@ -123,7 +123,63 @@ $sampleTypeKeys = ['suelos', 'aguas', 'foliares', 'cana', 'mieles'];
 
 $activeArea = trim((string) ($_GET['area'] ?? 'aguas'));
 if (!in_array($activeArea, $sampleTypeKeys, true)) {
+  
     $activeArea = 'aguas';
+  
+    $activeArea = in_array('aguas', $sampleTypeKeys, true) ? 'aguas' : ($sampleTypeKeys[0] ?? 'aguas');
+}
+
+// Fetch Analyses from database
+$stmtAnalisis = $conexion->query("SELECT id_tipo, id_tipo_muestra, nombre FROM tipo_analisis ORDER BY id_tipo");
+$dbAnalisis = $stmtAnalisis->fetchAll(PDO::FETCH_ASSOC);
+
+
+$canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
+$canAnalisis = lab_can('laboratorio.analisis.ver');
+$canBlancoControl = lab_can('laboratorio.blanco_control.ver');
+$canConsolidacion = lab_can('laboratorio.consolidacion.ver');
+$canManageUsers = lab_can('laboratorio.usuarios.gestionar');
+
+$analysesBySampleTypeId = [];
+foreach ($dbAnalisis as $analisis) {
+    $idMuestra = $analisis['id_tipo_muestra'];
+    if (!isset($analysesBySampleTypeId[$idMuestra])) {
+        $analysesBySampleTypeId[$idMuestra] = [];
+    }
+    $analysesBySampleTypeId[$idMuestra][] = $analisis;
+}
+
+$analysesBySampleTypeKey = [];
+foreach ($sampleTypesByKey as $key => $sampleType) {
+    $idMuestra = $sampleType['id_tipo'];
+    $dbAnalisisList = $analysesBySampleTypeId[$idMuestra] ?? [];
+    
+    $analysesBySampleTypeKey[$key] = [];
+    foreach ($dbAnalisisList as $dbAnalisisItem) {
+        $info = get_analysis_info($key, $dbAnalisisItem['nombre']);
+        if ($info) {
+            $analysesBySampleTypeKey[$key][] = $info;
+        }
+    }
+}
+
+// Suelos group division
+$suelosFisicos = [];
+$suelosQuimicos = [];
+$suelosAnalyses = $analysesBySampleTypeKey['suelos'] ?? [];
+foreach ($suelosAnalyses as $analisis) {
+    if (in_array($analisis['key'], [
+        'suelos.textura',
+        'suelos.humedad',
+        'suelos.humedad_residual',
+        'suelos.dap',
+        'suelos.cc',
+        'suelos.pmp'
+    ], true)) {
+        $suelosFisicos[] = $analisis;
+    } else {
+        $suelosQuimicos[] = $analisis;
+    }
 }
 
 $suelosFisicos = labc_visible_analysis([
@@ -145,6 +201,7 @@ $suelosQuimicos = labc_visible_analysis([
     ['key' => 'suelos.azufre', 'href' => '../controllers/Suelos/azufre_controller.php', 'label' => 'Azufre'],
     ['key' => 'suelos.fosforo', 'href' => '../controllers/Suelos/fosforo_controller.php', 'label' => 'Fósforo'],
 ]);
+
 
 $suelosCardsFisicos = labc_prepare_cards($suelosFisicos, 'suelos.textura');
 $suelosCardsQuimicos = labc_prepare_cards($suelosQuimicos, 'suelos.ph');
@@ -226,6 +283,20 @@ if ($canConsolidacion) {
         'href' => '../controllers/consolidacion_controller.php',
         'label' => 'Hoja de consolidación',
         'icon' => 'fa-layer-group',
+    ];
+}
+if ($canAnalisis) {
+    $utilityCards[] = [
+        'key' => 'analisis.catalogo',
+        'href' => '../catalogo_analisis.php',
+        'label' => 'Catálogo de análisis',
+        'icon' => 'fa-table-list',
+    ];
+    $utilityCards[] = [
+        'key' => 'muestras.catalogo',
+        'href' => '../catalogo_muestras.php',
+        'label' => 'Catálogo de muestras',
+        'icon' => 'fa-vials',
     ];
 }
 $utilityCards = labc_prepare_cards($utilityCards, 'consolidacion');

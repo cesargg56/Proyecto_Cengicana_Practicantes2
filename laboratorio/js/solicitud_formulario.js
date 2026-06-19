@@ -3,6 +3,8 @@ const CORRELATIVOS_DB = readJsonData("correlativos-db", []);
 const PDF_LOGO_URL = "../../assets/Marca%20Cengica%C3%B1a/SinFondo_logo_cengicana_Vertical.png";
 let solicitudSeleccionada = null;
 
+const ANALISIS = readJsonData("analisis-catalogo", {});
+if (false) {
 const ANALISIS = {
   "suelos": {
     label: "Suelos",
@@ -91,6 +93,7 @@ const ANALISIS = {
     metodo: "Análisis de agua para uso agrícola conforme a las normas COGUANOR NGO 29001 y métodos estándar APHA-AWWA-WEF (Standard Methods for the Examination of Water and Wastewater, 23ª edición). Las muestras deben recolectarse en frascos estériles y entregarse refrigeradas (4°C) en un máximo de 6 horas.",
   },
 };
+}
 
 function readJsonData(id, fallback) {
   const script = document.getElementById(id);
@@ -108,22 +111,47 @@ function setTipoFormulario(tipo) {
   if (input) input.value = tipo;
 }
 
+function getTipoFormularioPorDefecto() {
+  const activo = document.querySelector(".tipo-btn.active:not([disabled])");
+  if (activo?.dataset.tipo) return activo.dataset.tipo;
+
+  const primero = document.querySelector(".tipo-btn:not([disabled])");
+  if (primero?.dataset.tipo) return primero.dataset.tipo;
+
+  return "suelos";
+}
+
 function renderAnalisis(tipo) {
   const data = ANALISIS[tipo];
   const body = document.getElementById("analisis-body");
   if (!data || !body) return;
 
   setTipoFormulario(tipo);
-  body.innerHTML = data.items.map((item, i) => `
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  if (!items.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="3" class="center" style="padding:24px;color:#5b6f5e">
+          No hay análisis activos para este tipo de muestra.
+        </td>
+      </tr>
+    `;
+    document.getElementById("tipo-label-header").textContent = data.label || tipo;
+    updateNumeroLaboratorio();
+    return;
+  }
+
+  body.innerHTML = items.map((item, i) => `
     <tr>
       <td class="name">${item.nombre}</td>
       <td class="center"><span class="analisis-tag">${item.tipo || data.label}</span></td>
       <td class="center check-cell">
-        <input type="checkbox" name="analisis[]" value="${item.nombre}" id="chk-${tipo}-${i}" aria-label="Solicitar ${item.nombre}"/>
+        <input type="checkbox" name="analisis[]" value="${item.id_tipo}" id="chk-${tipo}-${i}" aria-label="Solicitar ${item.nombre}"/>
       </td>
     </tr>
   `).join("");
-  document.getElementById("tipo-label-header").textContent = data.label;
+  document.getElementById("tipo-label-header").textContent = data.label || tipo;
   updateNumeroLaboratorio();
 }
 
@@ -251,7 +279,7 @@ function initTipoButtons() {
 
   tipoBtns.addEventListener("click", event => {
     const btn = event.target.closest(".tipo-btn");
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
 
     document.querySelectorAll(".tipo-btn").forEach(item => item.classList.remove("active"));
     btn.classList.add("active");
@@ -283,16 +311,16 @@ function initTipoDesdeQuery() {
   };
   const qOriginal = params.get("tipo");
   const q = aliasTipos[qOriginal] || qOriginal;
+  const btn = q ? document.querySelector(`.tipo-btn[data-tipo="${q}"]`) : null;
 
-  if (!q || !ANALISIS[q]) {
-    renderAnalisis("suelos");
+  if (!q || !ANALISIS[q] || !btn || btn.disabled) {
+    renderAnalisis(getTipoFormularioPorDefecto());
     return;
   }
 
   const tiposCont = document.getElementById("tipo-btns");
   if (tiposCont) tiposCont.style.display = "none";
 
-  const btn = document.querySelector(`.tipo-btn[data-tipo="${q}"]`);
   if (btn) {
     document.querySelectorAll(".tipo-btn").forEach(item => item.classList.remove("active"));
     btn.classList.add("active");

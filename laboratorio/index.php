@@ -118,6 +118,21 @@ function labNuevoAnalisisUrl(string $tipo): string
             </li>
         <?php endif; ?>
 
+        <?php if ($canAnalisis): ?>
+            <li>
+                <a href="catalogo_analisis.php">
+                    <i class="fas fa-table-list"></i>
+                    <span>Catálogo de análisis</span>
+                </a>
+            </li>
+            <li>
+                <a href="catalogo_muestras.php">
+                    <i class="fas fa-vials"></i>
+                    <span>Catálogo de muestras</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
         <?php if ($canConsolidacion): ?>
             <li>
                 <a href="controllers/consolidacion_controller.php">

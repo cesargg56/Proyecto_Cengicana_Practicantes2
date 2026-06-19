@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/auth.php';
-require_once dirname(__DIR__, 2) . '../../login/config/conexion.php';
+require_once __DIR__ . '/../../login/config/conexion.php';
 
 const LAB_USERS_SCHEMA = 'usuarios_menu';
 

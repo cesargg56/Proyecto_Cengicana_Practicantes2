@@ -1,6 +1,9 @@
 <?php
 
-function solicitudColumnExists(PDO $conexion, string $column): bool {
+require_once __DIR__ . '/catalogo_muestras_helper.php';
+
+function solicitudColumnExists(PDO $conexion, string $column): bool
+{
   $columns = [];
 
   $stmt = $conexion->query("SHOW COLUMNS FROM solicitud");
@@ -11,7 +14,8 @@ function solicitudColumnExists(PDO $conexion, string $column): bool {
   return isset($columns[strtolower($column)]);
 }
 
-function asegurarColumnasFirmasSolicitud(PDO $conexion): void {
+function asegurarColumnasFirmasSolicitud(PDO $conexion): void
+{
   $columnas = [
     'correo_ingresado' => 'VARCHAR(255) NULL',
     'correo_recibido' => 'VARCHAR(255) NULL',
@@ -26,7 +30,8 @@ function asegurarColumnasFirmasSolicitud(PDO $conexion): void {
   }
 }
 
-function normalizarFirmaSolicitud($firma): string {
+function normalizarFirmaSolicitud($firma): string
+{
   $firma = trim((string) $firma);
 
   if ($firma === '') {
@@ -36,7 +41,8 @@ function normalizarFirmaSolicitud($firma): string {
   return preg_match('/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/', $firma) ? $firma : '';
 }
 
-function tipoMuestraNombreDesdeClave($tipo) {
+function tipoMuestraNombreDesdeClave($tipo)
+{
   $map = [
     'suelos' => 'suelos',
     'suelo-fisico' => 'suelos',
@@ -50,7 +56,8 @@ function tipoMuestraNombreDesdeClave($tipo) {
   return $map[$tipo] ?? 'suelos';
 }
 
-function mesAnioDesdeFecha($fecha) {
+function mesAnioDesdeFecha($fecha)
+{
   if (empty($fecha)) return '';
 
   $timestamp = strtotime($fecha);
@@ -59,30 +66,24 @@ function mesAnioDesdeFecha($fecha) {
   return date('m-y', $timestamp);
 }
 
-function construirCodigoLab($prefijo, $loteNumero, $mesAnio, $longitudLote) {
+function construirCodigoLab($prefijo, $loteNumero, $mesAnio, $longitudLote)
+{
   return strtoupper($prefijo) . '-' . str_pad((string) $loteNumero, $longitudLote, '0', STR_PAD_LEFT) . '-' . $mesAnio;
 }
 
-function obtenerTipoMuestra(PDO $conexion, $tipoFormulario) {
-  $nombre = tipoMuestraNombreDesdeClave($tipoFormulario);
-  $stmt = $conexion->prepare("SELECT id_tipo, nombre, prefijo FROM tipo_muestra WHERE LOWER(nombre) = LOWER(?) LIMIT 1");
-  $stmt->execute([$nombre]);
-  $tipo = $stmt->fetch();
+function obtenerTipoMuestra(PDO $conexion, $tipoFormulario)
+{
+  $tipo = labCatalogoMuestrasObtenerPorClave($conexion, (string) $tipoFormulario, true);
 
-  if ($tipo) return $tipo;
+  if ($tipo) {
+    return $tipo;
+  }
 
-  $prefijo = strtoupper(substr($nombre, 0, 1));
-  $insert = $conexion->prepare("INSERT INTO tipo_muestra (nombre, prefijo) VALUES (?, ?)");
-  $insert->execute([$nombre, $prefijo]);
-
-  return [
-    'id_tipo' => $conexion->lastInsertId(),
-    'nombre' => $nombre,
-    'prefijo' => $prefijo,
-  ];
+  throw new RuntimeException('El tipo de muestra "' . (string) $tipoFormulario . '" no existe en el catálogo activo del laboratorio.');
 }
 
-function obtenerLote(PDO $conexion, $codigoLote) {
+function obtenerLote(PDO $conexion, $codigoLote)
+{
   $stmt = $conexion->prepare("SELECT id_lote FROM lote WHERE codigo_lote = ? LIMIT 1");
   $stmt->execute([$codigoLote]);
   $lote = $stmt->fetch();
@@ -95,7 +96,8 @@ function obtenerLote(PDO $conexion, $codigoLote) {
   return (int) $conexion->lastInsertId();
 }
 
-function obtenerTipoAnalisis(PDO $conexion, $idTipoMuestra, $nombreAnalisis) {
+function obtenerTipoAnalisis(PDO $conexion, $idTipoMuestra, $nombreAnalisis)
+{
   $stmt = $conexion->prepare("
     SELECT id_tipo
     FROM tipo_analisis
@@ -105,15 +107,11 @@ function obtenerTipoAnalisis(PDO $conexion, $idTipoMuestra, $nombreAnalisis) {
   $stmt->execute([$idTipoMuestra, $nombreAnalisis]);
   $analisis = $stmt->fetch();
 
-  if ($analisis) return (int) $analisis['id_tipo'];
-
-  $insert = $conexion->prepare("INSERT INTO tipo_analisis (id_tipo_muestra, nombre) VALUES (?, ?)");
-  $insert->execute([$idTipoMuestra, $nombreAnalisis]);
-
-  return (int) $conexion->lastInsertId();
+  return $analisis ? (int) $analisis['id_tipo'] : null;
 }
 
-function obtenerNumeroCodigoLab($codigoLab) {
+function obtenerNumeroCodigoLab($codigoLab)
+{
   if (preg_match('/^[A-Z]-([0-9]+)-[0-9]{2}-[0-9]{2}$/i', (string) $codigoLab, $matches)) {
     return (int) $matches[1];
   }
@@ -121,8 +119,11 @@ function obtenerNumeroCodigoLab($codigoLab) {
   return null;
 }
 
-function obtenerInicioLaboratorioSolicitud(PDO $conexion, $idSolicitud) {
-  if (!$idSolicitud) return null;
+function obtenerInicioLaboratorioSolicitud(PDO $conexion, $idSolicitud)
+{
+  if (!$idSolicitud) {
+    return null;
+  }
 
   $stmt = $conexion->prepare("SELECT codigo_lab FROM muestra WHERE id_solicitud = ?");
   $stmt->execute([$idSolicitud]);
@@ -138,7 +139,8 @@ function obtenerInicioLaboratorioSolicitud(PDO $conexion, $idSolicitud) {
   return $numeros ? min($numeros) : null;
 }
 
-function obtenerInicioLaboratorioNuevo(PDO $conexion, $prefijo, $tipoMuestraNombre, $cantidadMuestras) {
+function obtenerInicioLaboratorioNuevo(PDO $conexion, $prefijo, $tipoMuestraNombre, $cantidadMuestras)
+{
   $stmt = $conexion->prepare("
     SELECT ultimo_numero
     FROM correlativo_envio_solicitud
@@ -178,7 +180,8 @@ function obtenerInicioLaboratorioNuevo(PDO $conexion, $prefijo, $tipoMuestraNomb
   return $inicio;
 }
 
-function sincronizarCorrelativo(PDO $conexion, $prefijo, $ultimoNumero) {
+function sincronizarCorrelativo(PDO $conexion, $prefijo, $ultimoNumero)
+{
   $stmt = $conexion->prepare("
     UPDATE correlativo_envio_solicitud
     SET ultimo_numero = ?
@@ -187,7 +190,8 @@ function sincronizarCorrelativo(PDO $conexion, $prefijo, $ultimoNumero) {
   $stmt->execute([$ultimoNumero, strtoupper($prefijo)]);
 }
 
-function sincronizarCorrelativosConMuestras(PDO $conexion) {
+function sincronizarCorrelativosConMuestras(PDO $conexion)
+{
   $stmt = $conexion->query("
     SELECT
       UPPER(SUBSTRING_INDEX(codigo_lab, '-', 1)) AS prefijo,
@@ -210,7 +214,8 @@ function sincronizarCorrelativosConMuestras(PDO $conexion) {
   }
 }
 
-function obtenerRango(PDO $conexion, $idLote, $inicio, $fin) {
+function obtenerRango(PDO $conexion, $idLote, $inicio, $fin)
+{
   $stmt = $conexion->prepare("SELECT id_rango FROM lote_rango WHERE id_lote = ? AND inicio = ? AND fin = ? LIMIT 1");
   $stmt->execute([$idLote, $inicio, $fin]);
   $rango = $stmt->fetch();
@@ -223,7 +228,8 @@ function obtenerRango(PDO $conexion, $idLote, $inicio, $fin) {
   return (int) $conexion->lastInsertId();
 }
 
-function insertarLoteAnalisis(PDO $conexion, $idRango, $idTipoAnalisis) {
+function insertarLoteAnalisis(PDO $conexion, $idRango, $idTipoAnalisis)
+{
   $stmt = $conexion->prepare("SELECT id FROM lote_analisis WHERE id_rango = ? AND id_tipo_analisis = ? LIMIT 1");
   $stmt->execute([$idRango, $idTipoAnalisis]);
 

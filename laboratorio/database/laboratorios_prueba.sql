@@ -1008,7 +1008,7 @@ CREATE TABLE `correlativo_envio_solicitud` (
 
 LOCK TABLES `correlativo_envio_solicitud` WRITE;
 /*!40000 ALTER TABLE `correlativo_envio_solicitud` DISABLE KEYS */;
-INSERT INTO `correlativo_envio_solicitud` VALUES (1,'suelos','S',108,'Alias incluido en suelos','2026-06-10 21:26:02'),(2,'caña','C',501,'Correlativo para solicitudes de caña','2026-06-10 20:42:58'),(3,'foliares','F',491,'Correlativo para solicitudes foliares','2026-06-01 22:48:40'),(4,'mieles','M',491,'Correlativo para solicitudes de mieles','2026-06-01 22:48:40'),(5,'agua','A',658,'Correlativo para solicitudes de agua','2026-06-04 20:50:22'),(6,'caña brix','B',491,'Correlativo para caña brix','2026-06-01 22:48:40'),(7,'agua carbonatos','D',491,'Correlativo para agua carbonatos','2026-06-01 22:48:40'),(8,'mieles brix','R',491,'Correlativo para mieles brix','2026-06-01 22:48:40'),(11,'enmiendas','E',491,'Correlativo para solicitudes de enmiendas','2026-06-01 22:55:04'),(12,'granos','G',491,'Correlativo para solicitudes de granos','2026-06-01 22:55:04');
+INSERT INTO `correlativo_envio_solicitud` VALUES (1,'suelos','S',108,'Alias incluido en suelos','2026-06-10 21:26:02'),(2,'caÃ±a','C',501,'Correlativo para solicitudes de caÃ±a','2026-06-10 20:42:58'),(3,'foliares','F',491,'Correlativo para solicitudes foliares','2026-06-01 22:48:40'),(4,'mieles','M',491,'Correlativo para solicitudes de mieles','2026-06-01 22:48:40'),(5,'agua','A',658,'Correlativo para solicitudes de agua','2026-06-04 20:50:22'),(6,'caÃ±a brix','B',491,'Correlativo para caÃ±a brix','2026-06-01 22:48:40'),(7,'agua carbonatos','D',491,'Correlativo para agua carbonatos','2026-06-01 22:48:40'),(8,'mieles brix','R',491,'Correlativo para mieles brix','2026-06-01 22:48:40'),(11,'enmiendas','E',491,'Correlativo para solicitudes de enmiendas','2026-06-01 22:55:04'),(12,'granos','G',491,'Correlativo para solicitudes de granos','2026-06-01 22:55:04');
 /*!40000 ALTER TABLE `correlativo_envio_solicitud` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2549,6 +2549,7 @@ CREATE TABLE `tipo_analisis` (
   `id_tipo` int NOT NULL AUTO_INCREMENT,
   `id_tipo_muestra` int DEFAULT NULL,
   `nombre` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id_tipo`),
   KEY `fk_tipo_analisis_tipo_muestra` (`id_tipo_muestra`),
   CONSTRAINT `fk_tipo_analisis_tipo_muestra` FOREIGN KEY (`id_tipo_muestra`) REFERENCES `tipo_muestra` (`id_tipo`)
@@ -2561,7 +2562,7 @@ CREATE TABLE `tipo_analisis` (
 
 LOCK TABLES `tipo_analisis` WRITE;
 /*!40000 ALTER TABLE `tipo_analisis` DISABLE KEYS */;
-INSERT INTO `tipo_analisis` VALUES (1,4,'Sólidos totales disueltos (STD)'),(2,4,'pH'),(3,4,'Conductividad elÃ©ctrica (CE)'),(4,4,'SÃ³lidos totales disueltos (STD)'),(5,4,'Dureza total (CaCOâ‚ƒ)'),(6,4,'Coliformes totales y fecales'),(7,4,'Nitratos / Nitritos'),(8,1,'Textura'),(9,1,'Humedad gravimÃ©trica'),(10,1,'Porosidad total'),(11,1,'Densidad aparente'),(12,1,'Densidad real'),(13,1,'pH'),(14,1,'Materia orgÃ¡nica'),(15,1,'NitrÃ³geno total'),(16,1,'FÃ³sforo disponible'),(17,1,'Potasio intercambiable'),(18,1,'CIC (capacidad de intercambio catiÃ³nico)'),(19,2,'Fibra bruta');
+INSERT INTO `tipo_analisis` VALUES (1,4,'SÃ³lidos totales disueltos (STD)',1),(2,4,'pH',1),(3,4,'Conductividad elÃƒÂ©ctrica (CE)',1),(4,4,'SÃƒÂ³lidos totales disueltos (STD)',1),(5,4,'Dureza total (CaCOÃ¢â€šÆ’)',1),(6,4,'Coliformes totales y fecales',1),(7,4,'Nitratos / Nitritos',1),(8,1,'Textura',1),(9,1,'Humedad gravimÃƒÂ©trica',1),(10,1,'Porosidad total',1),(11,1,'Densidad aparente',1),(12,1,'Densidad real',1),(13,1,'pH',1),(14,1,'Materia orgÃƒÂ¡nica',1),(15,1,'NitrÃƒÂ³geno total',1),(16,1,'FÃƒÂ³sforo disponible',1),(17,1,'Potasio intercambiable',1),(18,1,'CIC (capacidad de intercambio catiÃƒÂ³nico)',1),(19,2,'Fibra bruta',1);
 /*!40000 ALTER TABLE `tipo_analisis` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2601,6 +2602,7 @@ CREATE TABLE `tipo_muestra` (
   `id_tipo` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) DEFAULT NULL,
   `prefijo` char(1) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_tipo`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2611,7 +2613,7 @@ CREATE TABLE `tipo_muestra` (
 
 LOCK TABLES `tipo_muestra` WRITE;
 /*!40000 ALTER TABLE `tipo_muestra` DISABLE KEYS */;
-INSERT INTO `tipo_muestra` VALUES (1,'suelos','s'),(2,'cañas','c'),(3,'mieles','m'),(4,'agua','a'),(5,'foliares','f');
+INSERT INTO `tipo_muestra` (`id_tipo`, `nombre`, `prefijo`, `activo`) VALUES (1,'suelos','s',1),(2,'cañas','c',1),(3,'mieles','m',1),(4,'agua','a',1),(5,'foliares','f',1);
 /*!40000 ALTER TABLE `tipo_muestra` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
