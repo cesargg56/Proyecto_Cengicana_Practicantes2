@@ -8,7 +8,24 @@ lab_require_module_access();
 asegurarColumnasFirmasSolicitud($conexion);
 labCatalogoAnalisisAsegurarEsquema($conexion);
 
+$catalogoMuestras = labCatalogoMuestrasFormularioData($conexion, false);
 $catalogoAnalisis = labCatalogoAnalisisFormularioData($conexion);
+
+$tipoFormularioInicial = null;
+foreach ($catalogoMuestras as $clave => $muestra) {
+  if (!empty($muestra['activo'])) {
+    $tipoFormularioInicial = $clave;
+    break;
+  }
+}
+
+if ($tipoFormularioInicial === null && !empty($catalogoMuestras)) {
+  $tipoFormularioInicial = array_key_first($catalogoMuestras);
+}
+
+if ($tipoFormularioInicial === null) {
+  $tipoFormularioInicial = 'suelos';
+}
 
 $message = '';
 $dbWarning = '';
@@ -22,8 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   try {
     $conexion->beginTransaction();
 
-    $tipoFormulario = $_POST['tipo_form'] ?? 'suelos';
-    $tipoMuestra = obtenerTipoMuestra($conexion, $tipoFormulario);
+    $tipoFormulario = (string) ($_POST['tipo_form'] ?? $tipoFormularioInicial);
+    $tipoMuestra = labCatalogoMuestrasObtenerPorClave($conexion, $tipoFormulario, !$idSolicitudPost ? true : false);
+    if (!$tipoMuestra) {
+      throw new RuntimeException('El tipo de muestra seleccionado ya no está disponible.');
+    }
     $codigoMuestreo = '';
     $codigoLote = trim($_POST['lote'] ?? '');
     $fechaMuestreo = $_POST['fecha_de_muestreo'] ?? null;
@@ -238,7 +258,7 @@ try {
   <?php endif; ?>
 
   <form id="solicitud-form" method="post">
-  <input type="hidden" id="tipo_form" name="tipo_form" value="suelos"/>
+  <input type="hidden" id="tipo_form" name="tipo_form" value="<?= htmlspecialchars($tipoFormularioInicial, ENT_QUOTES, 'UTF-8') ?>"/>
   <input type="hidden" id="firma_ingreso" name="firma_ingreso" value=""/>
   <input type="hidden" id="firma_recibe" name="firma_recibe" value=""/>
   <?php
@@ -262,7 +282,7 @@ try {
       <div>
         <div class="doc-title">Laboratorio Agroindustrial</div>
         <div class="doc-subtitle">
-          Boleta de solicitud de análisis de <strong id="tipo-label-header">Suelos Físico</strong>
+          Boleta de solicitud de análisis de <strong id="tipo-label-header"><?= htmlspecialchars((string) ($catalogoMuestras[$tipoFormularioInicial]['label'] ?? 'Suelos'), ENT_QUOTES, 'UTF-8') ?></strong>
         </div>
       </div>
     </div>
@@ -277,11 +297,25 @@ try {
 
   <!-- TIPO DE ANÁLISIS --->
   <div class="tipo-btns" id="tipo-btns">
-    <button type="button" class="tipo-btn active" data-tipo="suelos">Suelos</button>
-    <button type="button" class="tipo-btn" data-tipo="foliares">Foliares</button>
-    <button type="button" class="tipo-btn" data-tipo="cana">Caña</button>
-    <button type="button" class="tipo-btn" data-tipo="miel">Miel</button>
-    <button type="button" class="tipo-btn" data-tipo="agua">Agua</button>
+    <?php foreach ($catalogoMuestras as $clave => $muestra): ?>
+      <?php
+        $activo = !empty($muestra['activo']);
+        $classes = ['tipo-btn'];
+        if ($clave === $tipoFormularioInicial && $activo) {
+          $classes[] = 'active';
+        }
+        if (!$activo) {
+          $classes[] = 'tipo-btn--disabled';
+        }
+      ?>
+      <button
+        type="button"
+        class="<?= htmlspecialchars(implode(' ', $classes), ENT_QUOTES, 'UTF-8') ?>"
+        data-tipo="<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>"
+        <?= $activo ? '' : 'disabled aria-disabled="true" title="Tipo de muestra desactivado"' ?>>
+        <?= htmlspecialchars((string) ($muestra['label_plural'] ?? $muestra['label'] ?? $clave), ENT_QUOTES, 'UTF-8') ?>
+      </button>
+    <?php endforeach; ?>
   </div>
 <!-- DATOS DEL MUESTREO -->
 

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/catalogo_muestras_helper.php';
+
 if (!function_exists('labCatalogoAnalisisNormalizarTexto')) {
     function labCatalogoAnalisisNormalizarTexto(string $value): string
     {
@@ -40,8 +42,12 @@ if (!function_exists('labCatalogoAnalisisNormalizarTexto')) {
 }
 
 if (!function_exists('labCatalogoAnalisisClaveModulo')) {
-    function labCatalogoAnalisisClaveModulo(string $nombre): string
+    function labCatalogoAnalisisClaveModulo(string $nombre, ?string $prefijo = null): string
     {
+        if ($prefijo !== null && trim((string) $prefijo) !== '') {
+            return labCatalogoMuestrasClaveDesdePrefijo($prefijo, $nombre);
+        }
+
         $normalizado = labCatalogoAnalisisNormalizarTexto($nombre);
 
         switch ($normalizado) {
@@ -164,20 +170,28 @@ if (!function_exists('labCatalogoAnalisisTipoMuestraOptions')) {
     function labCatalogoAnalisisTipoMuestraOptions(PDO $conexion): array
     {
         $stmt = $conexion->query("
-            SELECT id_tipo, nombre, prefijo
+            SELECT id_tipo, nombre, prefijo, COALESCE(activo, 1) AS activo
               FROM tipo_muestra
-             ORDER BY id_tipo ASC
+             ORDER BY CASE UPPER(prefijo)
+                WHEN 'S' THEN 10
+                WHEN 'A' THEN 20
+                WHEN 'F' THEN 30
+                WHEN 'C' THEN 40
+                WHEN 'M' THEN 50
+                ELSE 90
+             END, id_tipo ASC
         ");
 
         $options = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $clave = labCatalogoAnalisisClaveModulo((string) ($row['nombre'] ?? ''));
+            $clave = labCatalogoAnalisisClaveModulo((string) ($row['nombre'] ?? ''), (string) ($row['prefijo'] ?? ''));
             $options[] = [
                 'id_tipo' => (int) $row['id_tipo'],
                 'nombre' => (string) ($row['nombre'] ?? ''),
                 'clave' => $clave,
                 'label' => labCatalogoAnalisisEtiquetaModuloPlural($clave),
                 'prefijo' => (string) ($row['prefijo'] ?? ''),
+                'activo' => (int) ($row['activo'] ?? 1) === 1,
             ];
         }
 
@@ -196,7 +210,8 @@ if (!function_exists('labCatalogoAnalisisFilas')) {
                 ta.id_tipo_muestra,
                 ta.nombre,
                 COALESCE(ta.activo, 1) AS activo,
-                tm.nombre AS nombre_muestra
+                tm.nombre AS nombre_muestra,
+                tm.prefijo AS prefijo_muestra
             FROM tipo_analisis ta
             LEFT JOIN tipo_muestra tm ON tm.id_tipo = ta.id_tipo_muestra
         ");
@@ -209,8 +224,8 @@ if (!function_exists('labCatalogoAnalisisFilas')) {
         }
 
         usort($filas, static function (array $a, array $b): int {
-            $ordenA = labCatalogoAnalisisOrdenModulo(labCatalogoAnalisisClaveModulo((string) ($a['nombre_muestra'] ?? '')));
-            $ordenB = labCatalogoAnalisisOrdenModulo(labCatalogoAnalisisClaveModulo((string) ($b['nombre_muestra'] ?? '')));
+            $ordenA = labCatalogoAnalisisOrdenModulo(labCatalogoAnalisisClaveModulo((string) ($a['nombre_muestra'] ?? ''), (string) ($a['prefijo_muestra'] ?? '')));
+            $ordenB = labCatalogoAnalisisOrdenModulo(labCatalogoAnalisisClaveModulo((string) ($b['nombre_muestra'] ?? ''), (string) ($b['prefijo_muestra'] ?? '')));
 
             if ($ordenA !== $ordenB) {
                 return $ordenA <=> $ordenB;
@@ -256,7 +271,7 @@ if (!function_exists('labCatalogoAnalisisAgrupar')) {
         $vistos = [];
 
         foreach ($filas as $fila) {
-            $clave = labCatalogoAnalisisClaveModulo((string) ($fila['nombre_muestra'] ?? ''));
+            $clave = labCatalogoAnalisisClaveModulo((string) ($fila['nombre_muestra'] ?? ''), (string) ($fila['prefijo_muestra'] ?? ''));
             if (!isset($grupos[$clave])) {
                 $grupos[$clave] = [
                     'key' => $clave,
@@ -350,7 +365,8 @@ if (!function_exists('labCatalogoAnalisisObtenerPorId')) {
                 ta.id_tipo_muestra,
                 ta.nombre,
                 COALESCE(ta.activo, 1) AS activo,
-                tm.nombre AS nombre_muestra
+                tm.nombre AS nombre_muestra,
+                tm.prefijo AS prefijo_muestra
             FROM tipo_analisis ta
             LEFT JOIN tipo_muestra tm ON tm.id_tipo = ta.id_tipo_muestra
             WHERE ta.id_tipo = ?

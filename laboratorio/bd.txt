@@ -12,7 +12,8 @@ USE laboratorios_prueba;
 CREATE TABLE tipo_muestra (
     id_tipo INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255),
-    prefijo CHAR(1)
+    prefijo CHAR(1),
+    activo TINYINT(1) DEFAULT 1
 );
 
 -- =====================================================
