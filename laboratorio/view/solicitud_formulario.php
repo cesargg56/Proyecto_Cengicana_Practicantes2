@@ -472,6 +472,6 @@ try {
 <script type="application/json" id="correlativos-db"><?php echo json_encode($correlativosDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
 <script type="application/json" id="analisis-catalogo"><?php echo json_encode($catalogoAnalisis, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
 <script src="../node_modules/pdf-lib/dist/pdf-lib.min.js"></script>
-<script src="../js/solicitud_formulario.js?v=5"></script>
+<script src="../js/solicitud_formulario.js?v=6"></script>
 </body>
 </html>
