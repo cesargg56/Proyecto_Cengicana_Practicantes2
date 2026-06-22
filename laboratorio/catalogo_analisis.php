@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'toggle') {
             $idTipo = isset($_POST['id_tipo']) ? (int) $_POST['id_tipo'] : 0;
-            $activo = isset($_POST['activo']) ? 1 : 0;
+            $activo = isset($_POST['activo']) ? (int) $_POST['activo'] : 0;
 
             if ($idTipo <= 0) {
                 throw new RuntimeException('No se encontró el análisis solicitado.');
@@ -903,7 +903,6 @@ foreach ($grupos as $clave => $grupo) {
                             <table class="module-table">
                                 <thead>
                                     <tr>
-                                        <th style="width:80px">ID</th>
                                         <th>Nombre</th>
                                         <th style="width:140px">Estado</th>
                                         <th style="width:180px">Módulo</th>
@@ -915,7 +914,7 @@ foreach ($grupos as $clave => $grupo) {
                                 <tbody>
                                     <?php if (empty($rows)): ?>
                                         <tr>
-                                            <td colspan="<?= $canEdit ? 5 : 4 ?>" class="empty-state">
+                                            <td colspan="<?= $canEdit ? 4 : 3 ?>" class="empty-state">
                                                 No hay registros en este módulo.
                                             </td>
                                         </tr>
@@ -926,7 +925,6 @@ foreach ($grupos as $clave => $grupo) {
                                                 $isEditing = $editingRow && (int) $editingRow['id_tipo'] === (int) $row['id_tipo'];
                                             ?>
                                             <tr class="table-row<?= $isEditing ? ' is-editing' : '' ?>" data-searchable-row="<?= catalogoAnalisisE($row['nombre']) ?> <?= catalogoAnalisisE($section['label_plural']) ?> <?= catalogoAnalisisE($section['label']) ?>">
-                                                <td><?= (int) $row['id_tipo'] ?></td>
                                                 <td>
                                                     <strong><?= catalogoAnalisisE($row['nombre']) ?></strong>
                                                 </td>
