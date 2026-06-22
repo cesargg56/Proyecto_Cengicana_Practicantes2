@@ -202,8 +202,6 @@ function lab_all_permissions(): array
         'laboratorio.labc.ver',
         'laboratorio.formularios_labc.ver',
         'laboratorio.analisis.ver',
-        'laboratorio.catalogo_analisis.ver',
-        'laboratorio.catalogo_muestras.ver',
         'laboratorio.analisis.crear',
         'laboratorio.analisis.editar',
         'laboratorio.analisis.editar_finalizado',
@@ -249,8 +247,6 @@ function lab_default_permissions_for_role(): array
             'laboratorio.labc.ver',
             'laboratorio.formularios_labc.ver',
             'laboratorio.analisis.ver',
-            'laboratorio.catalogo_analisis.ver',
-            'laboratorio.catalogo_muestras.ver',
             'laboratorio.analisis.crear',
             'laboratorio.analisis.editar',
             'laboratorio.formularios_pendientes.ver',
@@ -263,8 +259,6 @@ function lab_default_permissions_for_role(): array
             'laboratorio.labc.ver',
             'laboratorio.formularios_labc.ver',
             'laboratorio.analisis.ver',
-            'laboratorio.catalogo_analisis.ver',
-            'laboratorio.catalogo_muestras.ver',
             'laboratorio.analisis.crear',
             'laboratorio.analisis.editar',
         ];
@@ -280,8 +274,6 @@ function lab_default_permissions_for_role(): array
             'laboratorio.labc.ver',
             'laboratorio.formularios_labc.ver',
             'laboratorio.analisis.ver',
-            'laboratorio.catalogo_analisis.ver',
-            'laboratorio.catalogo_muestras.ver',
             'laboratorio.consolidacion.ver',
             'laboratorio.consolidacion.aprobar',
             'laboratorio.formularios_erroneos.ver',
@@ -401,7 +393,7 @@ function lab_redirect_to_login(): void
     header('Location: ' . $loginUrl);
     exit;
 }
-
+    
 function lab_forbidden(string $message = 'No tiene permisos para acceder a este recurso.'): void
 {
     http_response_code(403);
