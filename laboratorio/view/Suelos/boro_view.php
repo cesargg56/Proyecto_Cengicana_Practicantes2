@@ -59,8 +59,8 @@ $resultado = $resultado ?? [];
 
         <hr class="divider">
             <div class="section-title">Curva de calibración</div>
-                <div class="table-wrap">
-                    <table>
+                <div class="table-wrap calibration-table-wrap">
+                    <table class="calibration-table">
                         <thead>
                             <tr>
                                 <th>Punto curva</th>

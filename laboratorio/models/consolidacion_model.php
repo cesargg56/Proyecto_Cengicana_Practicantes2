@@ -83,12 +83,14 @@ function obtenerFilasConsolidacion($idTipo, $codigoLote = '')
             COALESCE(lr.fin, m.max_muestra) AS fin
         FROM solicitud s
         LEFT JOIN lote l ON l.id_lote = s.id_lote
-        LEFT JOIN lote_rango lr ON lr.id_lote = l.id_lote
         LEFT JOIN (
             SELECT id_solicitud, MIN(numero_muestra) AS min_muestra, MAX(numero_muestra) AS max_muestra
               FROM muestra
              GROUP BY id_solicitud
         ) m ON m.id_solicitud = s.id_solicitud
+        LEFT JOIN lote_rango lr ON lr.id_lote = l.id_lote
+            AND lr.inicio = m.min_muestra
+            AND lr.fin = m.max_muestra
         LEFT JOIN (
             SELECT f.id_rango,
                    MAX(f.fecha) AS fecha_finalizacion,

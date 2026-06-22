@@ -12,7 +12,7 @@ $bicarbonatos_mgl){
     );
 
     if ($stmt->execute([$ml_acl, $ml_carbonatos, $normalidad_h2oso4, $volumen_muestra, $bicarbonatos_mgl])) {
-        return ["exito" => true, "mensaje" => "Cloruros guardados correctamente."];
+        return ["exito" => true, "mensaje" => "Cloruros guardados correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

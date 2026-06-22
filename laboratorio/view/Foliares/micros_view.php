@@ -102,8 +102,8 @@ $resultado = $resultado ?? [];
                 </div>
 
                 <h3>Puntos de la curva</h3>
-                <div class="table-wrap">
-                    <table class="analisis-table">
+                <div class="table-wrap calibration-table-wrap">
+                    <table class="analisis-table calibration-table">
                         <thead>
                             <tr>
                                 <th>Patrón</th>

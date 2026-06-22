@@ -10,7 +10,7 @@ function guardarResistividad($lectura_resistividad) {
     );
 
     if ($stmt->execute([$lectura_resistividad])) {
-        return ["exito" => true, "mensaje" => "Resistividad guardada correctamente."];
+        return ["exito" => true, "mensaje" => "Resistividad guardada correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

@@ -10,7 +10,7 @@ function guardarConductividad($lectura_conductividad, $temperatura, $ce) {
     );
 
     if ($stmt->execute([$lectura_conductividad, $temperatura, $ce])) {
-        return ["exito" => true, "mensaje" => "Conductividad Eléctrica de agua guardada correctamente."];
+        return ["exito" => true, "mensaje" => "Conductividad Eléctrica de agua guardada correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

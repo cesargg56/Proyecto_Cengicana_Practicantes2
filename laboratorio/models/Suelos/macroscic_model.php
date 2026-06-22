@@ -22,7 +22,7 @@ function guardarMacroscic($peso, $ppm_ca, $ppm_mg, $ppm_k, $ppm_na,
         $meq_ca, $meq_mg, $meq_k, $meq_na, $control,
         $cic_blanco, $cic_muestra, $cic_meq
     ])) {
-        return ["exito" => true, "mensaje" => "Macro Nutrientes y Cic guardados correctamente."];
+        return ["exito" => true, "mensaje" => "Macro Nutrientes y Cic guardados correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

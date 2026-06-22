@@ -14,7 +14,7 @@ $porcentaje_cc, $no_caja, $control) {
     if ($stmt->execute([
         $peso_caja, $peso_caja_mhumeda, $peso_caja_mseca, $psh, $pss, $porcentaje_cc, $no_caja, $control
     ])) {
-        return ["exito" => true, "mensaje" => "Capacidad de Campo guardada correctamente."];
+        return ["exito" => true, "mensaje" => "Capacidad de Campo guardada correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }
