@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/includes/catalogo_analisis_helper.php';
 
-lab_require_permission('laboratorio.analisis.ver');
+lab_require_permission('laboratorio.catalogo_analisis.ver');
 
 function catalogoAnalisisE($value): string
 {
