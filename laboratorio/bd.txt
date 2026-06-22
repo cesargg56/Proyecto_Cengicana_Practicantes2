@@ -12,7 +12,8 @@ USE laboratorios_prueba;
 CREATE TABLE tipo_muestra (
     id_tipo INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255),
-    prefijo CHAR(1)
+    prefijo CHAR(1),
+    activo TINYINT(1) DEFAULT 1
 );
 
 -- =====================================================
@@ -82,6 +83,8 @@ CREATE TABLE tipo_analisis (
     id_tipo_muestra INT,
 
     nombre VARCHAR(255),
+
+    activo TINYINT(1) NOT NULL DEFAULT 1,
 
     CONSTRAINT fk_tipo_analisis_tipo_muestra
         FOREIGN KEY (id_tipo_muestra)
