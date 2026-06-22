@@ -126,21 +126,52 @@
     });
   }
 
-  function fillLaboratorioOptions(select, muestras, lote, preferred) {
+  function buildLaboratorioSpecialOptions(definitions) {
+    const usedValues = new Set();
+
+    return definitions.reduce((options, definition) => {
+      const label = (definition.label || definition.name || '').trim();
+      if (!label || usedValues.has(label)) {
+        return options;
+      }
+
+      usedValues.add(label);
+      options.push({ value: label, label });
+      return options;
+    }, []);
+  }
+
+  function fillLaboratorioOptions(select, muestras, lote, preferred, specialOptions = []) {
     const values = muestras[lote] || [];
     select.innerHTML = '';
 
     const empty = document.createElement('option');
     empty.value = '';
-    empty.textContent = values.length ? 'Seleccione' : 'Sin número';
+    empty.textContent = values.length || specialOptions.length ? 'Seleccione' : 'Sin número';
     select.appendChild(empty);
 
-    values.forEach((numero) => {
+    const usedValues = new Set(['']);
+    specialOptions.forEach(({ value, label }) => {
       const option = document.createElement('option');
-      option.value = numero;
-      option.textContent = numero;
-      option.selected = numero === preferred;
+      option.value = value;
+      option.textContent = label;
+      option.selected = value === preferred;
       select.appendChild(option);
+      usedValues.add(value);
+    });
+
+    values.forEach((numero) => {
+      const value = String(numero);
+      if (usedValues.has(value)) {
+        return;
+      }
+
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      option.selected = value === preferred;
+      select.appendChild(option);
+      usedValues.add(value);
     });
   }
 
@@ -155,7 +186,7 @@
       return;
     }
 
-    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const rows = dataRows(tbody);
     const selected = new Map();
 
     rows.forEach((row) => {
@@ -205,7 +236,7 @@
 
     const seen = new Set();
 
-    for (const row of Array.from(tbody.querySelectorAll('tr'))) {
+    for (const row of dataRows(tbody)) {
       const key = laboratorioKey(row);
       if (!key) {
         continue;
@@ -221,6 +252,15 @@
     return false;
   }
 
+  function dataRows(tbody) {
+    return tbody ? Array.from(tbody.querySelectorAll('tr.lab-data-row')) : [];
+  }
+
+  function lastDataRow(tbody) {
+    const rows = dataRows(tbody);
+    return rows[rows.length - 1] || null;
+  }
+
   function nextLote(lotes, current) {
     if (!lotes.length) {
       return '';
@@ -231,7 +271,7 @@
   }
 
   function reindexRows(tbody) {
-    Array.from(tbody.querySelectorAll('tr')).forEach((row, index) => {
+    dataRows(tbody).forEach((row, index) => {
       row.querySelector('.lab-row-index').textContent = String(index + 1);
       row.querySelectorAll('[data-row-index]').forEach((input) => {
         input.dataset.rowIndex = String(index);
@@ -259,8 +299,16 @@
     });
   }
 
-  function createRow({ definitions, lotes, muestras, selectedLote, rowIndex }) {
+  function createRow({
+    definitions,
+    lotes,
+    muestras,
+    selectedLote,
+    rowIndex,
+    specialOptions,
+  }) {
     const row = document.createElement('tr');
+    row.className = 'lab-data-row';
 
     const indexCell = document.createElement('td');
     indexCell.className = 'lab-row-index';
@@ -278,12 +326,12 @@
     const labCell = document.createElement('td');
     const labSelect = document.createElement('select');
     labSelect.name = 'numero_laboratorio[]';
-    fillLaboratorioOptions(labSelect, muestras, loteSelect.value, '');
+    fillLaboratorioOptions(labSelect, muestras, loteSelect.value, '', specialOptions);
     labCell.appendChild(labSelect);
     row.appendChild(labCell);
 
     loteSelect.addEventListener('change', () => {
-      fillLaboratorioOptions(labSelect, muestras, loteSelect.value, '');
+      fillLaboratorioOptions(labSelect, muestras, loteSelect.value, '', specialOptions);
       updateLaboratorioAvailability(row.parentElement);
     });
 
@@ -305,7 +353,7 @@
     removeButton.title = 'Quitar fila';
     removeButton.addEventListener('click', () => {
       const tbody = row.parentElement;
-      if (!tbody || tbody.rows.length <= 1) {
+      if (!tbody || dataRows(tbody).length <= 1) {
         return;
       }
       row.remove();
@@ -326,10 +374,12 @@
     const footer = form.querySelector('.form-footer');
     const formBody = form.querySelector('.form-body') || form;
     const config = parseConfig(form);
-    const controls = Array.from(formBody.querySelectorAll('input, select, textarea'))
-      .filter((control) => isPrimaryControl(control, footer) && !isSharedAnalysisControl(control));
+    const primaryControls = Array.from(formBody.querySelectorAll('input, select, textarea'))
+      .filter((control) => isPrimaryControl(control, footer));
+    const controls = primaryControls.filter((control) => !isSharedAnalysisControl(control));
+    const sharedControls = primaryControls.filter(isSharedAnalysisControl);
 
-    if (!controls.length) {
+    if (!controls.length && !sharedControls.length) {
       return;
     }
 
@@ -338,8 +388,14 @@
       label: getControlLabel(control),
       template: control.cloneNode(true),
     }));
+    const sharedDefinitions = sharedControls.map((control) => ({
+      name: control.name,
+      label: getControlLabel(control),
+      template: control.cloneNode(true),
+    }));
+    const laboratorioSpecialOptions = buildLaboratorioSpecialOptions(sharedDefinitions);
 
-    controls.forEach(hideOriginal);
+    primaryControls.forEach(hideOriginal);
     cleanupOriginalLayout(formBody);
 
     const wrapper = document.createElement('section');
@@ -370,35 +426,40 @@
     });
 
     const tbody = wrapper.querySelector('tbody');
+
     tbody.appendChild(createRow({
       definitions,
       lotes: config.lotes || [],
       muestras: config.muestras || {},
       selectedLote: config.loteActual || (config.lotes || [])[0] || '',
       rowIndex: 0,
+      specialOptions: laboratorioSpecialOptions,
     }));
     updateLaboratorioAvailability(tbody);
 
     wrapper.querySelector('[data-add-row]').addEventListener('click', () => {
-      const lastLote = tbody.lastElementChild?.querySelector('select[name="lote[]"]')?.value || config.loteActual || '';
+      const lastRow = lastDataRow(tbody);
+      const lastLote = lastRow?.querySelector('select[name="lote[]"]')?.value || config.loteActual || '';
       tbody.appendChild(createRow({
         definitions,
         lotes: config.lotes || [],
         muestras: config.muestras || {},
         selectedLote: lastLote,
-        rowIndex: tbody.rows.length,
+        rowIndex: dataRows(tbody).length,
+        specialOptions: laboratorioSpecialOptions,
       }));
       updateLaboratorioAvailability(tbody);
     });
 
     wrapper.querySelector('[data-add-lote]').addEventListener('click', () => {
-      const lastLote = tbody.lastElementChild?.querySelector('select[name="lote[]"]')?.value || config.loteActual || '';
+      const lastLote = lastDataRow(tbody)?.querySelector('select[name="lote[]"]')?.value || config.loteActual || '';
       tbody.appendChild(createRow({
         definitions,
         lotes: config.lotes || [],
         muestras: config.muestras || {},
         selectedLote: nextLote(config.lotes || [], lastLote),
-        rowIndex: tbody.rows.length,
+        rowIndex: dataRows(tbody).length,
+        specialOptions: laboratorioSpecialOptions,
       }));
       updateLaboratorioAvailability(tbody);
     });
