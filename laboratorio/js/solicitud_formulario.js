@@ -446,8 +446,9 @@ function getInputValue(selector) {
 function getAnalisisSeleccionados() {
   return Array.from(document.querySelectorAll('input[name="analisis[]"]:checked')).map(input => {
     const row = input.closest("tr");
+    const nombre = row?.querySelector(".name")?.textContent || input.getAttribute("aria-label") || input.value;
     return {
-      nombre: limpiarTextoPdf(input.value),
+      nombre: limpiarTextoPdf(nombre.replace(/^Solicitar\s+/i, "")),
       tipo: limpiarTextoPdf(row?.querySelector(".analisis-tag")?.textContent || ""),
     };
   });
