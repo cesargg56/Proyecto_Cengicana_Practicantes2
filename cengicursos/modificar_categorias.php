@@ -1,19 +1,30 @@
 <?php
-	include("conexion.php");
-	$mysqli = conectar();
-	if (!empty($_GET['id'])) {
-		$id= $_GET['id'];
 
-	$sql="SELECT * FROM categorias_cursos WHERE id=$id";
-	$resultado=mysqli_query($mysqli,$sql) or die ("Error en la selección de datos");
+require_once("conexion.php");
 
-	$row=$resultado->fetch_array(MYSQLI_ASSOC);
-	}
-	else
-	{
-		$resultado=false;
-		$error="Debe indicar el id";
-	} 
+$db = conectar();
+
+if (!empty($_GET['id'])) {
+
+    $id = (int)$_GET['id'];
+
+    $stmt = $db->prepare("
+        SELECT *
+        FROM categorias_cursos
+        WHERE id = ?
+    ");
+
+    $stmt->execute([$id]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+} else {
+
+    $resultado = false;
+    $error = "Debe indicar el id";
+
+}
+
 ?>
 <html lang="es">
 <?php include('head.php'); ?>

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../conexion.php';
+$conexion = Conexion::conectar();
 
 lab_require_module_access();
 
@@ -120,6 +122,13 @@ function labc_history_href(string $area): ?string
 }
 
 $sampleTypeKeys = ['suelos', 'aguas', 'foliares', 'cana', 'mieles'];
+$sampleTypesByKey = [
+    'suelos' => ['id_tipo' => 1],
+    'aguas' => ['id_tipo' => 2],
+    'foliares' => ['id_tipo' => 3],
+    'cana' => ['id_tipo' => 4],
+    'mieles' => ['id_tipo' => 5],
+];
 
 $activeArea = trim((string) ($_GET['area'] ?? 'aguas'));
 if (!in_array($activeArea, $sampleTypeKeys, true)) {
@@ -150,18 +159,6 @@ foreach ($dbAnalisis as $analisis) {
 }
 
 $analysesBySampleTypeKey = [];
-foreach ($sampleTypesByKey as $key => $sampleType) {
-    $idMuestra = $sampleType['id_tipo'];
-    $dbAnalisisList = $analysesBySampleTypeId[$idMuestra] ?? [];
-    
-    $analysesBySampleTypeKey[$key] = [];
-    foreach ($dbAnalisisList as $dbAnalisisItem) {
-        $info = get_analysis_info($key, $dbAnalisisItem['nombre']);
-        if ($info) {
-            $analysesBySampleTypeKey[$key][] = $info;
-        }
-    }
-}
 
 // Suelos group division
 $suelosFisicos = [];
