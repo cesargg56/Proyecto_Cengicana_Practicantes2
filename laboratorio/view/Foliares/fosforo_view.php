@@ -66,8 +66,8 @@ $resultado = $resultado ?? [];
                 </div>
 
                 <h3>Curva de Calibración</h3>
-                <div class="table-wrap">
-                    <table class="analisis-table">
+                <div class="table-wrap calibration-table-wrap">
+                    <table class="analisis-table calibration-table">
                         <thead>
                             <tr>
                                 <th>Punto Curva</th>

@@ -12,7 +12,7 @@ $cloruros_mgl){
     );
 
     if ($stmt->execute([$ml_muestra, $ml_agno3_blanco, $ml_agno3_muestra, $normalidad_agno3, $cloruros_mgl])) {
-        return ["exito" => true, "mensaje" => "Cloruros guardados correctamente."];
+        return ["exito" => true, "mensaje" => "Cloruros guardados correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

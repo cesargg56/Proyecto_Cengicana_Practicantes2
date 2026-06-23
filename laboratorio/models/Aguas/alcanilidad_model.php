@@ -11,7 +11,7 @@ function guardarAlcanilidad($ml_h2oso4, $normalidad_h2oso4, $vol_muestra, $alcan
     );
 
     if ($stmt->execute([$ml_h2oso4, $normalidad_h2oso4, $vol_muestra, $alcanilidad_mgl])) {
-        return ["exito" => true, "mensaje" => "Alcalinidad guardada correctamente."];
+        return ["exito" => true, "mensaje" => "Alcalinidad guardada correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

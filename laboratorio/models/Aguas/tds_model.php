@@ -10,7 +10,7 @@ function guardarTDS($lectura_tds, $tds_mgl) {
     );
 
     if ($stmt->execute([$lectura_tds, $tds_mgl])) {
-        return ["exito" => true, "mensaje" => "TDS guardado correctamente."];
+        return ["exito" => true, "mensaje" => "TDS guardado correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

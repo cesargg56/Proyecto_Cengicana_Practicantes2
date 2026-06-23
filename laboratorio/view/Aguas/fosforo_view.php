@@ -55,7 +55,8 @@ $resultado = $resultado ?? [];
 
         <h3>Curva de Calibración</h3>
 
-    <table border="1">
+    <div class="table-wrap calibration-table-wrap">
+    <table class="calibration-table">
         <tr>
             <th>Punto Curva</th>
             <th>Absorbancia</th>
@@ -112,6 +113,7 @@ $resultado = $resultado ?? [];
         </tr>
 
     </table>
+    </div>
         </div>
         </div>
 

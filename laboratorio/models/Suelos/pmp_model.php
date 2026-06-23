@@ -14,7 +14,7 @@ $no_caja,$control) {
     if ($stmt->execute([
         $peso_caja, $peso_caja_mhumeda, $peso_caja_mseca, $psh, $pss, $porcentaje_pmp, $no_caja, $control
     ])) {
-        return ["exito" => true, "mensaje" => "Punto de Marchitez Permanente guardado correctamente."];
+        return ["exito" => true, "mensaje" => "Punto de Marchitez Permanente guardado correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }
