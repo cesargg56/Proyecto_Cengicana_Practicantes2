@@ -17,14 +17,15 @@ $tipos = '';
 $params = [];
 
 if ($campo !== '') {
+
     $condiciones[] = "(
-        s.nombre_participante LIKE ?
-        OR c.nombre_cursos LIKE ?
-        OR i.nombre_ingenios LIKE ?
-        OR s.correo LIKE ?
-        OR s.telefono LIKE ?
-        OR s.tipo_pago LIKE ?
-    )";
+    s.nombre_participante ILIKE ?
+    OR c.nombre_cursos ILIKE ?
+    OR i.nombre_ingenios ILIKE ?
+    OR s.correo ILIKE ?
+    OR s.telefono ILIKE ?
+    OR s.tipo_pago::text ILIKE ?
+)";
 
     $like = '%' . $campo . '%';
     $tipos .= 'ssssss';
@@ -32,9 +33,9 @@ if ($campo !== '') {
 }
 
 if (!cengi_ve_todo_por_rol_o_ingenio()) {
-    $condiciones[] = "regexp_replace(lower(translate(i.nombre_ingenios, 'Ã¡Ã©Ã­Ã³ÃºÃÃ‰ÃÃ“ÃšÃ±Ã‘', 'aeiouAEIOUnN')), '\s+', '', 'g') = ?";
+    $condiciones[] = "regexp_replace(lower(translate(i.nombre_ingenios, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '[^a-z0-9]+', '', 'g') = ?";
     $tipos .= 's';
-    $params[] = cengi_texto_normalizado(cengi_ingenio_nombre_actual());
+    $params[] = cengi_texto_normalizado_fuerte(cengi_ingenio_nombre_actual());
 }
 
 $where = $condiciones ? 'WHERE ' . implode(' AND ', $condiciones) : '';
@@ -180,6 +181,8 @@ table{background:white;}
 
 </body>
 </html>
+
+
 
 
 

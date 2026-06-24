@@ -17,8 +17,8 @@ $stmtIngenios = $db->query("
 $stmtCursos = $db->query("
     SELECT id, nombre_cursos
     FROM cursos
-    WHERE estado_cursos = 1
     ORDER BY nombre_cursos
+
 ");
 ?>
 <!DOCTYPE html>

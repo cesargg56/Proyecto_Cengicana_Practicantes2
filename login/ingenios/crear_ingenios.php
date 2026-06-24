@@ -7,7 +7,7 @@ $conn = Conexion::conectar();
 if ($_POST) {
     $nombre = $_POST['nombre'];
 
-    $stmt = $conn->prepare("INSERT INTO Ingenios (nombre_ingenio) VALUES (?)");
+    $stmt = $conn->prepare("INSERT INTO ingenios (nombre_ingenio) VALUES (?)");
     $stmt->execute([$nombre]);
 
     header("Location: ingenios.php");

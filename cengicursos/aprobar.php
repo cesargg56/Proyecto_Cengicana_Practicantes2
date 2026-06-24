@@ -84,7 +84,34 @@ function cengi_crear_o_asociar_usuario_estudiante(array $solicitud)
         $nombre = trim((string) ($solicitud['nombre_participante'] ?? ''));
         $contrasenaHash = password_hash(cengi_password_temporal_estudiante($solicitud), PASSWORD_DEFAULT);
         $rolId = (int) $rolEstudiante['id'];
-        $ingenioId = isset($solicitud['ingenio_id']) ? (int) $solicitud['ingenio_id'] : null;
+
+        $ingenioId = null;
+
+if (!empty($solicitud['nombre_ingenios'])) {
+
+    $stmtIngenio = $conexionUsuarios->prepare("
+        SELECT id
+        FROM ingenios
+        WHERE nombre_ingenio = ?
+        LIMIT 1
+    ");
+
+    $stmtIngenio->bind_param(
+        's',
+        $solicitud['nombre_ingenio']
+    );
+
+    $stmtIngenio->execute();
+
+    $resultadoIngenio = $stmtIngenio->get_result();
+    $ingenio = $resultadoIngenio
+        ? $resultadoIngenio->fetch_assoc()
+        : null;
+
+    if ($ingenio) {
+        $ingenioId = (int)$ingenio['id'];
+    }
+}
         $esSuperadmin = 0;
 
         $stmtInsertUsuario = $conexionUsuarios->prepare("
