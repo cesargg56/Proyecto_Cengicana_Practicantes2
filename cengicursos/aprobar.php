@@ -87,7 +87,7 @@ function cengi_crear_o_asociar_usuario_estudiante(array $solicitud)
 
         $ingenioId = null;
 
-if (!empty($solicitud['nombre_ingenios'])) {
+if (!empty($solicitud['nombre_ingenio'])) {
 
     $stmtIngenio = $conexionUsuarios->prepare("
         SELECT id
