@@ -193,6 +193,23 @@ function suelos_get_num_labs(PDO $pdo, int $idLote): array
         $params[] = $idLote;
     }
 
+    if (suelos_table_has_columns($pdo, 'muestra', ['id_solicitud'])) {
+        $parts[] = "
+            SELECT DISTINCT COALESCE(
+                m.numero_muestra,
+                CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(m.codigo_lab, '-', 2), '-', -1) AS UNSIGNED)
+            ) AS numero_laboratorio
+              FROM muestra m
+              INNER JOIN solicitud s ON s.id_solicitud = m.id_solicitud
+             WHERE s.id_lote = ?
+               AND COALESCE(
+                   m.numero_muestra,
+                   CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(m.codigo_lab, '-', 2), '-', -1) AS UNSIGNED)
+               ) IS NOT NULL
+        ";
+        $params[] = $idLote;
+    }
+
     if (!$parts) {
         return [];
     }
@@ -216,6 +233,57 @@ function suelos_fetch_latest(PDO $pdo, string $table, int $idLote, $numLab): arr
     } catch (Throwable $e) {
         return [];
     }
+}
+
+function suelos_fetch_latest_by_solicitud(PDO $pdo, string $table, int $idSolicitud): array
+{
+    if ($idSolicitud <= 0 || !suelos_table_has_columns($pdo, $table, ['id_solicitud'])) {
+        return [];
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM `$table` WHERE id_solicitud = ? ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$idSolicitud]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+function suelos_get_solicitud_for_lab(PDO $pdo, int $idLote, $numLab): ?int
+{
+    try {
+        $stmt = $pdo->prepare("
+            SELECT s.id_solicitud
+              FROM solicitud s
+              INNER JOIN muestra m ON m.id_solicitud = s.id_solicitud
+             WHERE s.id_lote = ?
+               AND (m.numero_muestra = ? OR m.codigo_lab = ?)
+             ORDER BY s.id_solicitud DESC
+             LIMIT 1
+        ");
+        $stmt->execute([$idLote, $numLab, $numLab]);
+        $idSolicitud = $stmt->fetchColumn();
+
+        return $idSolicitud !== false ? (int) $idSolicitud : null;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
+function suelos_fetch_latest_with_fallback(PDO $pdo, string $table, int $idLote, $numLab): array
+{
+    $row = suelos_fetch_latest($pdo, $table, $idLote, $numLab);
+    if ($row) {
+        return $row;
+    }
+
+    $idSolicitud = suelos_get_solicitud_for_lab($pdo, $idLote, $numLab);
+    if ($idSolicitud === null) {
+        return [];
+    }
+
+    return suelos_fetch_latest_by_solicitud($pdo, $table, $idSolicitud);
 }
 
 function suelos_get_lab_code(PDO $pdo, int $idLote, $numLab): string
