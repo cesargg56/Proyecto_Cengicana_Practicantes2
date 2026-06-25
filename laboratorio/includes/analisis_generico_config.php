@@ -126,19 +126,14 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['agua', 'aguas'],
             'analisis' => ['Macros', 'Macronutrientes'],
             'fields' => [
-                ['name' => 'factor_dilucion', 'label' => 'Factor dilución'],
-                ['name' => 'ca_ml', 'label' => 'Ca ml'],
-                ['name' => 'mg_ml', 'label' => 'Mg ml'],
-                ['name' => 'k_ml', 'label' => 'K ml'],
-                ['name' => 'na_ml', 'label' => 'Na ml'],
+                ['name' => 'ca_ml', 'label' => 'Ca ug/ml'],
+                ['name' => 'mg_ml', 'label' => 'Mg ug/ml'],
+                ['name' => 'k_ml', 'label' => 'K ug/ml'],
+                ['name' => 'na_ml', 'label' => 'Na ug/ml'],
                 ['name' => 'blanco_ca', 'label' => 'Blanco Ca'],
                 ['name' => 'blanco_mg', 'label' => 'Blanco Mg'],
                 ['name' => 'blanco_k', 'label' => 'Blanco K'],
                 ['name' => 'blanco_na', 'label' => 'Blanco Na'],
-                ['name' => 'ca_mgl', 'label' => 'Ca mg/L'],
-                ['name' => 'mg_mgl', 'label' => 'Mg mg/L'],
-                ['name' => 'k_mgl', 'label' => 'K mg/L'],
-                ['name' => 'na_mgl', 'label' => 'Na mg/L'],
             ],
         ],
         'aguas-ras' => [
@@ -152,10 +147,24 @@ function lab_generic_analysis_configs(): array
                 ['name' => 'na_ug', 'label' => 'Na ug'],
                 ['name' => 'ca_ug', 'label' => 'Ca ug'],
                 ['name' => 'mg_ug', 'label' => 'Mg ug'],
-                ['name' => 'na_meq', 'label' => 'Na meq'],
-                ['name' => 'ca_meq', 'label' => 'Ca meq'],
-                ['name' => 'mg_meq', 'label' => 'Mg meq'],
-                ['name' => 'ras', 'label' => 'RAS'],
+            ],
+        ],
+        'aguas-micros' => [
+            'key' => 'aguas.micros',
+            'tipo' => 'Aguas',
+            'elemento' => 'Micro Nutrientes',
+            'table' => 'agua_micros',
+            'tipos' => ['agua', 'aguas'],
+            'analisis' => ['Micro Nutrientes', 'Micronutrientes', 'Cu, Zn, Fe, Mn'],
+            'fields' => [
+                ['name' => 'conc_cu', 'label' => 'Cu ug/ml'],
+                ['name' => 'conc_zn', 'label' => 'Zn ug/ml'],
+                ['name' => 'conc_fe', 'label' => 'Fe ug/ml'],
+                ['name' => 'conc_mn', 'label' => 'Mn ug/ml'],
+                ['name' => 'blk_cu', 'label' => 'Blanco Cu'],
+                ['name' => 'blk_zn', 'label' => 'Blanco Zn'],
+                ['name' => 'blk_fe', 'label' => 'Blanco Fe'],
+                ['name' => 'blk_mn', 'label' => 'Blanco Mn'],
             ],
         ],
         'aguas-boro' => [
@@ -170,7 +179,7 @@ function lab_generic_analysis_configs(): array
                 ['name' => 'absorbancia', 'label' => 'Absorbancia'],
                 ['name' => 'pendiente', 'label' => 'Pendiente'],
                 ['name' => 'intercepto', 'label' => 'Intercepto'],
-                ['name' => 'boro', 'label' => 'Boro'],
+                
             ],
         ],
         'aguas-ph' => [
@@ -205,7 +214,6 @@ function lab_generic_analysis_configs(): array
             'fields' => [
                 ['name' => 'ml_edta', 'label' => 'ml EDTA'],
                 ['name' => 'ml_muestra', 'label' => 'ml muestra'],
-                ['name' => 'dureza', 'label' => 'Dureza'],
             ],
         ],
         'aguas-carbonatos' => [
@@ -219,7 +227,6 @@ function lab_generic_analysis_configs(): array
                 ['name' => 'ml_h2so4', 'label' => 'ml H2SO4'],
                 ['name' => 'normalidad_h2so4', 'label' => 'Normalidad H2SO4'],
                 ['name' => 'volumen_muestra', 'label' => 'Volumen muestra'],
-                ['name' => 'carbonatos', 'label' => 'Carbonatos'],
             ],
         ],
         'foliares-macros' => [
