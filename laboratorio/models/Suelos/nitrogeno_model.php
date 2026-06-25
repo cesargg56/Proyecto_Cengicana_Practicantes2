@@ -11,7 +11,7 @@ $control) {
     );
 
     if ($stmt->execute([$peso, $ml_blanco, $ml_muestra, $porcentaje_nitro, $x_nitrogeno])) {
-        return ["exito" => true, "mensaje" => "Porcentaje de nitrogeno guardado correctamente."];
+        return ["exito" => true, "mensaje" => "Porcentaje de nitrogeno guardado correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

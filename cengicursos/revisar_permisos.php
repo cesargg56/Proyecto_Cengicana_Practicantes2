@@ -8,23 +8,43 @@ if (session_status() === PHP_SESSION_NONE) {
 function cengi_texto_normalizado($valor)
 {
     $valor = trim((string) $valor);
+
+    if ($valor === '') {
+        return '';
+    }
+
+    if (class_exists('Normalizer')) {
+        $normalized = Normalizer::normalize($valor, Normalizer::FORM_D);
+        if ($normalized !== false) {
+            $valor = preg_replace('/\p{Mn}+/u', '', $normalized) ?? $normalized;
+        }
+    }
+
+    if (function_exists('iconv')) {
+        $converted = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $valor);
+        if ($converted !== false) {
+            $valor = $converted;
+        }
+    }
+
     $valor = mb_strtolower($valor, 'UTF-8');
     $valor = strtr($valor, [
+        'ñ' => 'n',
+        'Ñ' => 'n',
         'á' => 'a',
         'é' => 'e',
         'í' => 'i',
         'ó' => 'o',
         'ú' => 'u',
-        'ñ' => 'n',
-        'Á' => 'a',
-        'É' => 'e',
-        'Í' => 'i',
-        'Ó' => 'o',
-        'Ú' => 'u',
-        'Ñ' => 'n',
+        'ü' => 'u',
     ]);
 
-    return preg_replace('/\s+/', '', $valor);
+    return preg_replace('/[^a-z0-9]+/i', '', $valor) ?? '';
+}
+
+function cengi_texto_normalizado_fuerte($valor)
+{
+    return cengi_texto_normalizado($valor);
 }
 
 function usuario_tiene_modulo_cursos()
@@ -333,7 +353,7 @@ function cengi_scope_sql_por_nombre_ingenio($alias, $alreadyWhere = true, $colum
         return '';
     }
 
-    $ingenioNombre = cengi_texto_normalizado(cengi_ingenio_nombre_actual());
+    $ingenioNombre = cengi_texto_normalizado_fuerte(cengi_ingenio_nombre_actual());
     $prefijo = $alreadyWhere ? ' AND ' : ' WHERE ';
 
     if ($ingenioNombre === '') {
@@ -344,7 +364,7 @@ function cengi_scope_sql_por_nombre_ingenio($alias, $alreadyWhere = true, $colum
     $column = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $column);
 
     $referenciaColumna = $alias !== '' ? "{$alias}.{$column}" : $column;
-    $columnaNormalizada = "regexp_replace(lower(translate({$referenciaColumna}, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '\s+', '', 'g')";
+    $columnaNormalizada = "regexp_replace(lower(translate({$referenciaColumna}, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '[^a-z0-9]+', '', 'g')";
 
     return $prefijo . $columnaNormalizada . " = '" . addslashes($ingenioNombre) . "'";
 }
@@ -461,3 +481,4 @@ if (!isset($_SESSION['CMenus'])) {
     $_SESSION['CMenus'] = $_SESSION['rol'] ?? 'Usuario';
 }
 ?>
+

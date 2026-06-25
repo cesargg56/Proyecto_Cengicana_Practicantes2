@@ -26,7 +26,7 @@ function guardarBrixPol($brix, $pol, $peso_torta,
         $rendimiento_real_lbs, $rendimiento_real_kg,
         $porcentaje_pol_cana
     ])) {
-        return ["exito" => true, "mensaje" => "Brix y Pol guardados correctamente."];
+        return ["exito" => true, "mensaje" => "Brix y Pol guardados correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }

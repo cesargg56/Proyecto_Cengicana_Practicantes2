@@ -393,7 +393,7 @@ function lab_redirect_to_login(): void
     header('Location: ' . $loginUrl);
     exit;
 }
-
+    
 function lab_forbidden(string $message = 'No tiene permisos para acceder a este recurso.'): void
 {
     http_response_code(403);

@@ -9,6 +9,8 @@ if (!lab_can_any([
     'laboratorio.labc.ver',
     'laboratorio.formularios_labc.ver',
     'laboratorio.analisis.ver',
+    'laboratorio.catalogo_analisis.ver',
+    'laboratorio.catalogo_muestras.ver',
     'laboratorio.blanco_control.ver',
     'laboratorio.consolidacion.ver',
 ])) {
@@ -145,6 +147,8 @@ $dbAnalisis = $stmtAnalisis->fetchAll(PDO::FETCH_ASSOC);
 
 $canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
 $canAnalisis = lab_can('laboratorio.analisis.ver');
+$canCatalogoAnalisis = lab_can('laboratorio.catalogo_analisis.ver');
+$canCatalogoMuestras = lab_can('laboratorio.catalogo_muestras.ver');
 $canBlancoControl = lab_can('laboratorio.blanco_control.ver');
 $canConsolidacion = lab_can('laboratorio.consolidacion.ver');
 $canManageUsers = lab_can('laboratorio.usuarios.gestionar');
@@ -282,13 +286,15 @@ if ($canConsolidacion) {
         'icon' => 'fa-layer-group',
     ];
 }
-if ($canAnalisis) {
+if ($canCatalogoAnalisis) {
     $utilityCards[] = [
         'key' => 'analisis.catalogo',
         'href' => '../catalogo_analisis.php',
         'label' => 'Catálogo de análisis',
         'icon' => 'fa-table-list',
     ];
+}
+if ($canCatalogoMuestras) {
     $utilityCards[] = [
         'key' => 'muestras.catalogo',
         'href' => '../catalogo_muestras.php',

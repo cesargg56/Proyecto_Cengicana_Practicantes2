@@ -47,8 +47,8 @@ if ($esEstudiante) {
     }
 
     if (!cengi_ve_todo_por_rol_o_ingenio()) {
-        $normalizado = cengi_texto_normalizado(cengi_ingenio_nombre_actual());
-        $condiciones[] = "regexp_replace(lower(translate(i.nombre_ingenios, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '\s+', '', 'g') = ?";
+        $normalizado = cengi_texto_normalizado_fuerte(cengi_ingenio_nombre_actual());
+        $condiciones[] = "regexp_replace(lower(translate(i.nombre_ingenios, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '[^a-z0-9]+', '', 'g') = ?";
         $params[] = $normalizado;
         $condiciones[] = "
             EXISTS (
@@ -58,7 +58,7 @@ if ($esEstudiante) {
                 INNER JOIN ingenios ip ON ip.id = p.ingenio_id
                 WHERE a.cursos_id = c.id
                   AND a.estado_asignaciones = 1
-                  AND regexp_replace(lower(translate(ip.nombre_ingenios, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '\s+', '', 'g') = ?
+                  AND regexp_replace(lower(translate(ip.nombre_ingenios, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN')), '[^a-z0-9]+', '', 'g') = ?
             )
         ";
         $params[] = $normalizado;
@@ -227,3 +227,5 @@ $stmt->execute($params);
     <?php endif; ?>
 </body>
 </html>
+
+

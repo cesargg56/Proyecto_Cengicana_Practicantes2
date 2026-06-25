@@ -5,7 +5,7 @@ require_once __DIR__ . '/conexion.php';
 require_once __DIR__ . '/includes/catalogo_muestras_helper.php';
 
 lab_require_module_access();
-lab_require_permission('laboratorio.analisis.ver');
+lab_require_permission('laboratorio.catalogo_muestras.ver');
 
 labCatalogoMuestrasAsegurarEsquema($conexion);
 

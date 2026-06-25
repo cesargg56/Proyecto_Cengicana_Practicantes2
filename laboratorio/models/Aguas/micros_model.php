@@ -19,7 +19,7 @@ function guardarMicros( $conc_cu, $conc_zn, $conc_fe, $conc_mn,
         $blk_cu, $blk_zn, $blk_fe, $blk_mn,
         $cu_mgl, $zn_mgl, $fe_mgl, $mn_mgl
     ])) {
-        return ["exito" => true, "mensaje" => "Micro Nutrientes guardados correctamente."];
+        return ["exito" => true, "mensaje" => "Micro Nutrientes guardados correctamente.", "id" => (int) $conn->lastInsertId()];
     } else {
         return ["exito" => false, "mensaje" => "Error al guardar."];
     }
