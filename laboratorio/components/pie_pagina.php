@@ -190,8 +190,6 @@ if (!function_exists('labFooterCondiciones')) {
             $analisisLower = labFooterLower($analisis);
             $analisisParts[] = 'LOWER(ta.nombre) = ?';
             $params[] = $analisisLower;
-            $analisisParts[] = 'LOWER(ta.nombre) LIKE ?';
-            $params[] = '%' . $analisisLower . '%';
         }
 
         return [
@@ -845,7 +843,11 @@ $observaciones = trim((string) ($_POST['observaciones'] ?? $observaciones ?? '')
 $labFooterGuardado = null;
 $labFooterResultadosLegacy = isset($resultados) && is_array($resultados) ? array_values($resultados) : [];
 
-if ($lote_actual !== '' && !in_array($lote_actual, $labFooterLotes, true)) {
+if (
+    $lote_actual !== ''
+    && !in_array($lote_actual, $labFooterLotes, true)
+    && !labFooterAnalisisYaIngresado($labFooterContexto, $lote_actual)
+) {
     array_unshift($labFooterLotes, $lote_actual);
 }
 

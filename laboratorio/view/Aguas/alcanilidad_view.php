@@ -51,6 +51,10 @@ $resultado = $resultado ?? [];
                         <label for="ml_h2oso4">mL de H2SO4</label>
                         <input type="number" step="any" name="ml_h2oso4" id="ml_h2oso4" value="0.00" required>
                     </div>
+                    <div class="field">
+                        <label for="volumen_muestra">Volumen de la muestra</label>
+                        <input type="number" step="any" name="volumen_muestra" id="volumen_muestra" value="100.00" required>
+                    </div>
                 </div>
 
                 <?php include '../../components/pie_pagina.php'; ?>

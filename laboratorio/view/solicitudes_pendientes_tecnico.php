@@ -28,13 +28,13 @@ $stmt = $conexion->query("
         ON sa.id_solicitud = s.id_solicitud
     INNER JOIN tipo_analisis ta
         ON ta.id_tipo = sa.id_tipo_analisis
-    LEFT JOIN lote_rango lr
-        ON lr.id_lote = l.id_lote
     WHERE NOT EXISTS (
         SELECT 1
-          FROM formulario f
-         WHERE f.id_rango = lr.id_rango
+          FROM lote_rango lr2
+          INNER JOIN formulario f
+            ON f.id_rango = lr2.id_rango
            AND f.id_tipo_analisis = ta.id_tipo
+         WHERE lr2.id_lote = l.id_lote
     )
     GROUP BY
         l.id_lote,

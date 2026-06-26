@@ -433,20 +433,19 @@ try {
   <!-- FOOTER -->
   <footer class="doc-footer">
     <div class="footer-info">
-        <span class = "footer-title">AgroLab</span>
+        <span class = "footer-title">Laboratorio Agroindustrial</span>
       <span>
         <span class="material-symbols-outlined">location_on</span>
-        Km 92.5 Carretera a 
+        Km 92.5 Carretera a Santa Lucia Cotzumalguapa, Escuintla || Guatemala
     </span>
     <span>
         <span class="material-symbols-outlined">call</span>
-            +50 &nbsp;|&nbsp; , C. A.
+            +502 3135-5033
         </span>
     <span>
         <span class="material-symbols-outlined">mail</span>
-            laboratoriocg@AgroLab.org &nbsp;|&nbsp; diaboratorio@AgroLab.org
+            laboratorioagroindustrial@cengicana.org
         </span>
-      <span class="footer-meta">Generado por TecnoBoris v2.1</span>
     </div>
   </footer>
   </form>
@@ -471,7 +470,7 @@ try {
 <script type="application/json" id="solicitudes-db"><?php echo json_encode($solicitudesDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
 <script type="application/json" id="correlativos-db"><?php echo json_encode($correlativosDb, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
 <script type="application/json" id="analisis-catalogo"><?php echo json_encode($catalogoAnalisis, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG); ?></script>
-<script src="../node_modules/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="../js/solicitud_formulario.js?v=6"></script>
 </body>
 </html>

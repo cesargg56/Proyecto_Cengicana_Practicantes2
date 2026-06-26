@@ -48,6 +48,12 @@ $resultado = $resultado ?? [];
         <label>mL de H2SO4 para Alcalinidad Total
             <input type="number" step="any" name="ml_acl" id="ml_acl" value = "0.00" required>
         </label>
+        <label>mL de H2SO4 para Carbonatos
+            <input type="number" step="any" name="ml_carbonatos" id="ml_carbonatos" value="0.00" required>
+        </label>
+        <label>Volumen de la muestra
+            <input type="number" step="any" name="volumen_muestra" id="volumen_muestra" value="100.00" required>
+        </label>
         </div>
         
        </div>
