@@ -177,26 +177,97 @@ if (!function_exists('labFooterConexion')) {
 }
 
 if (!function_exists('labFooterCondiciones')) {
-    function labFooterCondiciones(array $contexto, array &$params): array
+    function labFooterValoresEnteros(array $values): array
     {
-        $tipoParts = [];
-        foreach ($contexto['tipos'] as $tipo) {
-            $tipoParts[] = 'LOWER(tm.nombre) = ?';
-            $params[] = labFooterLower($tipo);
+        $values = array_values(array_filter(array_map(static function ($value): int {
+            return (int) $value;
+        }, $values), static function (int $value): bool {
+            return $value > 0;
+        }));
+
+        return array_values(array_unique($values));
+    }
+
+    function labFooterResolverIdsPorNombre(PDO $pdo, string $tabla, string $columnaId, string $columnaNombre, array $valores): array
+    {
+        $valores = array_values(array_filter(array_map('trim', $valores), static function (string $value): bool {
+            return $value !== '';
+        }));
+
+        if (!$valores) {
+            return [];
         }
 
-        $analisisParts = [];
-        foreach ($contexto['analisis'] as $analisis) {
-            $analisisLower = labFooterLower($analisis);
-            $analisisParts[] = 'LOWER(ta.nombre) = ?';
-            $params[] = $analisisLower;
-            $analisisParts[] = 'LOWER(ta.nombre) LIKE ?';
-            $params[] = '%' . $analisisLower . '%';
+        $cacheKey = $tabla . '|' . $columnaId . '|' . $columnaNombre . '|' . md5(json_encode($valores));
+        static $cache = [];
+        if (array_key_exists($cacheKey, $cache)) {
+            return $cache[$cacheKey];
+        }
+
+        $placeholders = implode(' OR ', array_fill(0, count($valores), "LOWER($columnaNombre) = ?"));
+        $params = array_map('labFooterLower', $valores);
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT $columnaId
+              FROM $tabla
+             WHERE $placeholders
+        ");
+        $stmt->execute($params);
+
+        $cache[$cacheKey] = array_values(array_unique(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [])));
+
+        return $cache[$cacheKey];
+    }
+
+    function labFooterCondiciones(array $contexto, array &$params): array
+    {
+        $pdo = labFooterConexion();
+
+        $tipoIds = [];
+        if (isset($contexto['tipo_ids']) && is_array($contexto['tipo_ids'])) {
+            $tipoIds = labFooterValoresEnteros($contexto['tipo_ids']);
+        } elseif ($pdo && !empty($contexto['tipos']) && is_array($contexto['tipos'])) {
+            $tipoIds = labFooterResolverIdsPorNombre($pdo, 'tipo_muestra', 'id_tipo', 'nombre', $contexto['tipos']);
+        }
+
+        if ($tipoIds) {
+            $tipoPlaceholders = implode(', ', array_fill(0, count($tipoIds), '?'));
+            $params = array_merge($params, $tipoIds);
+            $tipoCondition = "tm.id_tipo IN ({$tipoPlaceholders})";
+        } else {
+            $tipoParts = [];
+            foreach (($contexto['tipos'] ?? []) as $tipo) {
+                $tipoParts[] = 'LOWER(tm.nombre) = ?';
+                $params[] = labFooterLower($tipo);
+            }
+
+            $tipoCondition = '(' . implode(' OR ', $tipoParts) . ')';
+        }
+
+        $analisisIds = [];
+        if (isset($contexto['analisis_ids']) && is_array($contexto['analisis_ids'])) {
+            $analisisIds = labFooterValoresEnteros($contexto['analisis_ids']);
+        } elseif ($pdo && !empty($contexto['analisis']) && is_array($contexto['analisis'])) {
+            $analisisIds = labFooterResolverIdsPorNombre($pdo, 'tipo_analisis', 'id_tipo', 'nombre', $contexto['analisis']);
+        }
+
+        if ($analisisIds) {
+            $analisisPlaceholders = implode(', ', array_fill(0, count($analisisIds), '?'));
+            $params = array_merge($params, $analisisIds);
+            $analisisCondition = "ta.id_tipo IN ({$analisisPlaceholders})";
+        } else {
+            $analisisParts = [];
+            foreach (($contexto['analisis'] ?? []) as $analisis) {
+                $analisisLower = labFooterLower($analisis);
+                $analisisParts[] = 'LOWER(ta.nombre) = ?';
+                $params[] = $analisisLower;
+            }
+
+            $analisisCondition = '(' . implode(' OR ', $analisisParts) . ')';
         }
 
         return [
-            'tipo' => '(' . implode(' OR ', $tipoParts) . ')',
-            'analisis' => '(' . implode(' OR ', $analisisParts) . ')',
+            'tipo' => $tipoCondition,
+            'analisis' => $analisisCondition,
         ];
     }
 }
@@ -837,7 +908,7 @@ if (!function_exists('labFooterGuardarFormulariosBase')) {
 
 $labFooterContexto = labFooterContextoAnalisis();
 $labFooterLotesContexto = labFooterLotesPorAnalisis($labFooterContexto);
-$labFooterLotes = $labFooterLotesContexto ?: labFooterTodosLosLotes();
+$labFooterLotes = $labFooterContexto !== null ? $labFooterLotesContexto : labFooterTodosLosLotes();
 $labFooterMuestras = labFooterMuestrasPorLote($labFooterContexto);
 $fecha_actual_footer = trim((string) ($_POST['fecha'] ?? date('Y-m-d')));
 $analista_actual = trim((string) ($_POST['analista'] ?? $_POST['tecnico'] ?? ''));
@@ -845,7 +916,11 @@ $observaciones = trim((string) ($_POST['observaciones'] ?? $observaciones ?? '')
 $labFooterGuardado = null;
 $labFooterResultadosLegacy = isset($resultados) && is_array($resultados) ? array_values($resultados) : [];
 
-if ($lote_actual !== '' && !in_array($lote_actual, $labFooterLotes, true)) {
+if (
+    $lote_actual !== ''
+    && !in_array($lote_actual, $labFooterLotes, true)
+    && !labFooterAnalisisYaIngresado($labFooterContexto, $lote_actual)
+) {
     array_unshift($labFooterLotes, $lote_actual);
 }
 

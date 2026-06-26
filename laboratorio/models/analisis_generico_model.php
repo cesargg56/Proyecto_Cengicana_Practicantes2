@@ -14,8 +14,6 @@ function labGenericConditions(array $values, string $column, array &$params): st
         $lower = labGenericLower((string) $value);
         $parts[] = "LOWER($column) = ?";
         $params[] = $lower;
-        $parts[] = "LOWER($column) LIKE ?";
-        $params[] = '%' . $lower . '%';
     }
 
     return '(' . implode(' OR ', $parts) . ')';
@@ -45,7 +43,7 @@ function labGenericDestino(array $config, string $codigoLote, string $numeroLabo
           LEFT JOIN tipo_analisis ta ON ta.id_tipo = sa.id_tipo_analisis
          WHERE l.codigo_lote = ?
            AND ($tipoCondition OR tm.id_tipo IS NULL)
-           AND ($analisisCondition OR ta.id_tipo IS NULL)
+           AND (ta.id_tipo IS NULL OR (COALESCE(ta.activo, 1) = 1 AND ($analisisCondition)))
          ORDER BY s.id_solicitud DESC, lr.id_rango DESC
          LIMIT 1
     ";
@@ -78,6 +76,7 @@ function labGenericDestino(array $config, string $codigoLote, string $numeroLabo
           FROM tipo_analisis ta
           INNER JOIN tipo_muestra tm ON tm.id_tipo = ta.id_tipo_muestra
          WHERE $tipoCondition
+           AND COALESCE(ta.activo, 1) = 1
            AND $analisisCondition
          ORDER BY ta.id_tipo DESC
          LIMIT 1
@@ -142,6 +141,7 @@ function labGenericLotesConAnalisisIngresado(array $config, array $lotes): array
                   ON f.id_rango = lr.id_rango
                  AND f.id_tipo_analisis = ta.id_tipo
          WHERE {$tipoCondition}
+           AND COALESCE(ta.activo, 1) = 1
            AND {$analisisCondition}
            AND l.codigo_lote IN ({$placeholders})
     ");

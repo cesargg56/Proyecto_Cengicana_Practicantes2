@@ -229,6 +229,29 @@ function lab_generic_analysis_configs(): array
                 ['name' => 'volumen_muestra', 'label' => 'Volumen muestra'],
             ],
         ],
+        'aguas-tds' => [
+            'key' => 'aguas.tds',
+            'tipo' => 'Aguas',
+            'elemento' => 'Solidos Totales Disueltos',
+            'table' => 'agua_tds',
+            'tipos' => ['agua', 'aguas'],
+            'analisis' => ['TDS', 'Solidos Totales Disueltos', 'Solidos totales disueltos'],
+            'fields' => [
+                ['name' => 'lectura_tds', 'label' => 'Lectura TDS'],
+                ['name' => 'tds_mgl', 'label' => 'TDS mg/L'],
+            ],
+        ],
+        'aguas-resistividad' => [
+            'key' => 'aguas.resistividad',
+            'tipo' => 'Aguas',
+            'elemento' => 'Resistividad',
+            'table' => 'agua_resistividad',
+            'tipos' => ['agua', 'aguas'],
+            'analisis' => ['Resistividad'],
+            'fields' => [
+                ['name' => 'lectura_resistividad', 'label' => 'Lectura Resistividad'],
+            ],
+        ],
         'foliares-macros' => [
             'key' => 'foliares.macros',
             'tipo' => 'Foliares',

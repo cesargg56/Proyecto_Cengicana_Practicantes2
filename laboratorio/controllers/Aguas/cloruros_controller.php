@@ -4,8 +4,25 @@ lab_require_analysis_access('aguas.cloruros');
 
 require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../includes/formulario_revision_helper.php';
+require_once __DIR__ . '/../../includes/analisis_generico_config.php';
 require_once __DIR__ . '/../../models/conexion.php';
-require_once __DIR__ . '/../../models/Aguas/cloruros_model.php';
+require_once __DIR__ . '/../../models/analisis_generico_model.php';
+
+$config = [
+    'key' => 'aguas.cloruros',
+    'tipo' => 'Aguas',
+    'elemento' => 'Cloruros',
+    'table' => 'agua_cloruros',
+    'tipos' => ['agua', 'aguas'],
+    'analisis' => ['Cloruros'],
+    'fields' => [
+        ['name' => 'ml_muestra', 'label' => 'mL muestra'],
+        ['name' => 'ml_agno3_blanco', 'label' => 'mL AgNO3 blanco'],
+        ['name' => 'ml_agno3_muestra', 'label' => 'mL AgNO3 muestra'],
+        ['name' => 'normalidad_agno3', 'label' => 'Normalidad AgNO3'],
+        ['name' => 'cloruros_mgl', 'label' => 'Cloruros mg/L'],
+    ],
+];
 
 $resultado = null;
 $labSkipFooterBaseSave = true;
@@ -16,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cloruros_mgl = 0;
     $fecha = trim((string) ($_POST['fecha'] ?? date('Y-m-d')));
     $analista = trim((string) ($_POST['analista'] ?? ''));
-    $estadoRevisarId = labFormularioEstadoRevisarId();
 
     if ($fecha === '' || $analista === '') {
         $resultado = [
@@ -40,49 +56,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : 0;
 
             try {
-                $conn = (new Conexion())->conectar();
-                $useTransaction = !$conn->inTransaction();
+                $pdo = Conexion::conectar();
+                $useTransaction = !$pdo->inTransaction();
                 if ($useTransaction) {
-                    $conn->beginTransaction();
+                    $pdo->beginTransaction();
                 }
 
-                $idLote = clorurosObtenerIdLote($conn, $codigoLote);
-                if (!$idLote) {
-                    throw new RuntimeException('El lote "' . $codigoLote . '" no existe en la base de datos.');
+                $destino = labGenericDestino($config, $codigoLote, $numeroLaboratorio);
+                if (empty($destino['id_lote'])) {
+                    throw new RuntimeException('No se pudo identificar el lote "' . $codigoLote . '".');
                 }
 
-                $idSolicitud = clorurosObtenerIdSolicitud($conn, $idLote);
-                $numeroLaboratorioNormalizado = clorurosResolverNumeroLaboratorio($conn, $idLote, $numeroLaboratorio);
-                if ($numeroLaboratorioNormalizado === null) {
-                    throw new RuntimeException('No se pudo identificar el número de laboratorio para "' . $numeroLaboratorio . '".');
+                if (empty($destino['id_solicitud'])) {
+                    throw new RuntimeException('No se pudo identificar la solicitud asociada al lote "' . $codigoLote . '".');
                 }
 
-                $idFormulario = clorurosCrearFormulario($conn, $estadoRevisarId, $fecha, $analista);
-                $guardado = guardarCloruros(
-                    $conn,
-                    $idSolicitud,
-                    $numeroLaboratorioNormalizado,
-                    $idLote,
+                if (empty($destino['id_tipo_analisis'])) {
+                    throw new RuntimeException('No se pudo identificar el tipo de análisis para cloruros.');
+                }
+
+                if (empty($destino['numero_muestra'])) {
+                    throw new RuntimeException('No se pudo identificar el número de laboratorio "' . $numeroLaboratorio . '".');
+                }
+
+                $idFormulario = labGenericCrearFormulario($destino, $fecha, $analista);
+                $row = [
+                    'lote' => $codigoLote,
+                    'numero_laboratorio' => $numeroLaboratorio,
+                    'ml_muestra' => $ml_muestra,
+                    'ml_agno3_blanco' => $ml_agno3_blanco,
+                    'ml_agno3_muestra' => $ml_agno3_muestra,
+                    'normalidad_agno3' => $normalidad_agno3,
+                    'cloruros_mgl' => $cloruros_mgl,
+                ];
+
+                labGenericInsertarAnalisis(
+                    $config,
+                    $row,
+                    $destino,
                     $idFormulario,
-                    $ml_muestra,
-                    $ml_agno3_blanco,
-                    $ml_agno3_muestra,
-                    $normalidad_agno3,
-                    $cloruros_mgl
+                    $fecha,
+                    $codigoLote,
+                    $numeroLaboratorio
                 );
-
-                if (!$guardado) {
-                    throw new RuntimeException('No se pudo guardar el registro de cloruros.');
-                }
+                labFormularioGuardarVersion($idFormulario, 'inicial', $analista, 'Version enviada desde el formulario de analisis de cloruros.');
 
                 if ($useTransaction) {
-                    $conn->commit();
+                    $pdo->commit();
                 }
 
                 $resultados[] = ['exito' => true, 'mensaje' => 'Cloruros guardados correctamente.'];
             } catch (Throwable $e) {
-                if (isset($conn, $useTransaction) && $useTransaction && $conn->inTransaction()) {
-                    $conn->rollBack();
+                if (isset($pdo, $useTransaction) && $useTransaction && $pdo->inTransaction()) {
+                    $pdo->rollBack();
                 }
 
                 $resultados[] = ['exito' => false, 'mensaje' => $e->getMessage()];
@@ -95,4 +121,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 require_once __DIR__ . '/../../view/Aguas/cloruros_view.php';
-?>
