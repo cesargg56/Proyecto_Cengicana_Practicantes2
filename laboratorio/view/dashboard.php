@@ -255,7 +255,7 @@ $grupoLabels = [
                     <div class="topbar-actions">
                         <a href="../index.php" class="topbar-link">Inicio</a>
                         <a href="<?= htmlspecialchars(dashboard_build_url($tipoReporte, $idLoteSelected)) ?>" class="topbar-link active">Informes</a>
-                        <a href="labc_index.php" class="topbar-link">Mapas</a>
+                        <a href="labc_index.php" class="topbar-link">Analisis</a>
                         <div class="topbar-avatar" aria-hidden="true">LAB</div>
                     </div>
                 </header>
