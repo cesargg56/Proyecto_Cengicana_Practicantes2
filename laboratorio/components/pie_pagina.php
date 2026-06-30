@@ -85,7 +85,7 @@ if (!function_exists('labFooterContextoAnalisis')) {
             ],
             'aguas/micros_controller.php' => [
                 'tipos' => ['agua', 'aguas'],
-                'analisis' => ['Micro Nutrientes', 'Micronutrientes', 'Cu, Zn, Fe, Mn'],
+                'analisis' => ['Micro Nutrientes', 'Micronutrientes', 'Micro Nutrientes (Cu, Zn, Fe, Mn)', 'Micronutrientes (Cu, Zn, Fe, Mn)', 'Micro Nutrientes de Aguas', 'Micronutrientes de Aguas', 'Cu, Zn, Fe, Mn'],
                 'label' => 'Micro Nutrientes de Aguas',
             ],
             'aguas/fosforo_controller.php' => [

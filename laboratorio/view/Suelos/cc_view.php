@@ -51,12 +51,6 @@ $resultado = $resultado ?? [];
         <label>Peso de caja
             <input type="number" step="any" name="peso_caja" required>
         </label>
-        <label>Numero de caja
-            <input type="text" step="any" name="no_caja" required>
-        </label>
-        <label>Control
-            <input type="number" step="any" name="control" required>
-        </label>
         <label>Peso de caja + Muestra Humeda
             <input type="number" step="any" name="peso_caja_mhumeda" required>
         </label>

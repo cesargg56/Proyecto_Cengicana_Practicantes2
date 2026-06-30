@@ -22,7 +22,7 @@ if (!function_exists('labLegacyConfigFromScript')) {
             'suelos/fosforo_controller.php' => ['tipos' => ['suelos', 'suelo'], 'analisis' => ['Fosforo', 'Fósforo', 'Fosforo disponible', 'Fósforo disponible']],
             'foliares/micros_controller.php' => ['tipos' => ['foliares', 'foliar'], 'analisis' => ['Micro Nutrientes', 'Micronutrientes', 'Cu, Zn, Fe, Mn, K']],
             'foliares/fosforo_controller.php' => ['tipos' => ['foliares', 'foliar'], 'analisis' => ['Fosforo', 'Fósforo', 'Fosforo foliar', 'Fósforo foliar']],
-            'aguas/micros_controller.php' => ['tipos' => ['agua', 'aguas'], 'analisis' => ['Micro Nutrientes', 'Micronutrientes', 'Cu, Zn, Fe, Mn']],
+            'aguas/micros_controller.php' => ['tipos' => ['agua', 'aguas'], 'analisis' => ['Micro Nutrientes', 'Micronutrientes', 'Micro Nutrientes (Cu, Zn, Fe, Mn)', 'Micronutrientes (Cu, Zn, Fe, Mn)', 'Micro Nutrientes de Aguas', 'Micronutrientes de Aguas', 'Cu, Zn, Fe, Mn']],
             'aguas/fosforo_controller.php' => ['tipos' => ['agua', 'aguas'], 'analisis' => ['Fosforo', 'Fósforo']],
             'aguas/conductividad_controller.php' => ['tipos' => ['agua', 'aguas'], 'analisis' => ['Conductividad Electrica', 'Conductividad Eléctrica', 'CE']],
             'aguas/tds_controller.php' => ['tipos' => ['agua', 'aguas'], 'analisis' => ['TDS', 'STD', 'Solidos totales disueltos', 'Sólidos totales disueltos']],

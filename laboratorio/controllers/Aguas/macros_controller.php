@@ -22,6 +22,13 @@ $labAnalysisContexto = [
 ];
 $GLOBALS['labAnalysisContexto'] = $labAnalysisContexto;
 
+if (!function_exists('aguasMacrosCalcularMgl')) {
+    function aguasMacrosCalcularMgl(float $lectura, float $blanco): float
+    {
+        return $lectura - $blanco;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $campos = ['lote', 'numero_laboratorio', 'ca_ml', 'mg_ml', 'k_ml', 'na_ml', 'blanco_ca', 'blanco_mg', 'blanco_k', 'blanco_na'];
     $resultados = [];
@@ -59,11 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $blancoNa = lab_post_float('blanco_na', $fila);
 
             try {
-                // En el formato físico, cada macronutriente es lectura menos su blanco correspondiente.
-                $caMgl = $caMl - $blancoCa;
-                $mgMgl = $mgMl - $blancoMg;
-                $kMgl = $kMl - $blancoK;
-                $naMgl = $naMl - $blancoNa;
+                // La hoja de calculo replica una resta simple: lectura menos blanco.
+                $caMgl = aguasMacrosCalcularMgl($caMl, $blancoCa);
+                $mgMgl = aguasMacrosCalcularMgl($mgMl, $blancoMg);
+                $kMgl = aguasMacrosCalcularMgl($kMl, $blancoK);
+                $naMgl = aguasMacrosCalcularMgl($naMl, $blancoNa);
 
                 $pdo = Conexion::conectar();
                 $useTransaction = !$pdo->inTransaction();
@@ -81,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if (empty($destino['id_tipo_analisis'])) {
-                    throw new RuntimeException('No se pudo identificar el tipo de análisis para macronutrientes.');
+                    throw new RuntimeException('No se pudo identificar el tipo de analisis para macronutrientes.');
                 }
 
                 if (empty($destino['numero_muestra'])) {
