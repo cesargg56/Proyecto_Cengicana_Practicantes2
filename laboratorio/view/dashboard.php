@@ -43,7 +43,7 @@ $analysisMap = [
     'suelos' => [
         'suelos-textura' => ['nombre' => 'Textura', 'tabla' => 'analisis_textura', 'grupo' => 'fisico'],
         'suelos-humedad' => ['nombre' => 'Humedad', 'tabla' => 'suelo_humedad', 'grupo' => 'fisico'],
-        'suelos-humedad-residual' => ['nombre' => 'Humedad Residual', 'tabla' => 'laboratorio_humedad', 'grupo' => 'fisico'],
+        'suelos-humedad-residual' => ['nombre' => 'Humedad Gravimetrica', 'tabla' => 'laboratorio_humedad', 'grupo' => 'fisico'],
         'suelos-dap' => ['nombre' => 'DAP (Densidad Aparente)', 'tabla' => 'suelo_dap', 'grupo' => 'fisico'],
         'suelos-cc' => ['nombre' => 'Capacidad de Campo', 'tabla' => 'suelo_cc', 'grupo' => 'fisico'],
         'suelos-pmp' => ['nombre' => 'Punto de Marchitez', 'tabla' => 'suelo_pmp', 'grupo' => 'fisico'],

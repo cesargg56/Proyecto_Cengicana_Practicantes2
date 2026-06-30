@@ -256,36 +256,125 @@ if (!function_exists('labFooterAnalisisYaIngresado')) {
 if (!function_exists('labFooterLotesPorAnalisis')) {
     function labFooterLotesPorAnalisis(?array $contexto): array
     {
+        $muestras = labFooterMuestrasPorLote($contexto);
+        $lotes = array_keys($muestras);
+        sort($lotes);
+        return $lotes;
+    }
+}
+
+if (!function_exists('labFooterContextoEsPorMuestra')) {
+    function labFooterContextoEsPorMuestra(?array $contexto): bool
+    {
         if (!$contexto) {
-            return [];
+            return false;
         }
 
+        $label = labFooterLower((string) ($contexto['label'] ?? ''));
+        return strpos($label, 'suelos') !== false
+            || strpos($label, 'foliar') !== false
+            || strpos($label, 'aguas') !== false
+            || strpos($label, 'caña') !== false
+            || strpos($label, 'cana') !== false;
+    }
+}
+
+if (!function_exists('labFooterExtractNumeroLaboratorio')) {
+    function labFooterExtractNumeroLaboratorio(string $numeroLaboratorio): ?int
+    {
+        $numeroLaboratorio = trim($numeroLaboratorio);
+        if ($numeroLaboratorio === '') {
+            return null;
+        }
+
+        if (is_numeric($numeroLaboratorio)) {
+            return (int) $numeroLaboratorio;
+        }
+
+        if (preg_match('/^[A-Za-z]+-(\d+)-\d{2}-\d{2}$/', $numeroLaboratorio, $matches)) {
+            return (int) $matches[1];
+        }
+
+        if (preg_match('/(\d+)/', $numeroLaboratorio, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('labFooterMuestrasUsadasPorTablaActual')) {
+    function labFooterMuestrasUsadasPorTablaActual(): array
+    {
         try {
             $pdo = labFooterConexion();
-            if (!$pdo) {
+            $tabla = labFooterTablaAnalisisActual();
+            if (!$pdo || !$tabla) {
                 return [];
             }
 
-            $params = [];
-            $condiciones = labFooterCondiciones($contexto, $params);
-            $stmt = $pdo->prepare("
-                SELECT DISTINCT l.codigo_lote
-                  FROM lote l
-                  INNER JOIN solicitud s ON s.id_lote = l.id_lote
-                  LEFT JOIN lote_rango lr ON lr.id_lote = l.id_lote
-                  INNER JOIN tipo_muestra tm ON tm.id_tipo = s.id_tipo
-                  INNER JOIN solicitud_analisis sa ON sa.id_solicitud = s.id_solicitud
-                  INNER JOIN tipo_analisis ta ON ta.id_tipo = sa.id_tipo_analisis
-                 WHERE l.codigo_lote IS NOT NULL
-                   AND l.codigo_lote <> ''
-                   AND {$condiciones['tipo']}
-                   AND {$condiciones['analisis']}
-                   AND " . labFooterPendienteAnalisisSql('lr', 'ta') . "
-                 ORDER BY l.codigo_lote
-            ");
-            $stmt->execute($params);
+            $columnas = labFooterColumnasTabla($pdo, $tabla);
+            if (!$columnas) {
+                return [];
+            }
 
-            return $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+            $exprLote = null;
+            $joinLote = '';
+
+            if (in_array('id_lote', $columnas, true)) {
+                $exprLote = 'l.codigo_lote';
+                $joinLote = ' INNER JOIN lote l ON l.id_lote = t.id_lote ';
+            } elseif (in_array('codigo_lote', $columnas, true)) {
+                $exprLote = 't.codigo_lote';
+            } elseif (in_array('lote', $columnas, true)) {
+                $exprLote = 't.lote';
+            }
+
+            $exprNumero = null;
+            $joinMuestra = '';
+            if (in_array('no_lab', $columnas, true)) {
+                $exprNumero = 't.no_lab';
+            } elseif (in_array('numero_laboratorio', $columnas, true)) {
+                if (in_array('id_solicitud', $columnas, true)) {
+                    $joinMuestra = ' LEFT JOIN muestra m ON m.id_solicitud = t.id_solicitud AND m.numero_muestra = t.numero_laboratorio ';
+                    $exprNumero = "COALESCE(m.codigo_lab, CAST(t.numero_laboratorio AS CHAR))";
+                } else {
+                    $exprNumero = 'CAST(t.numero_laboratorio AS CHAR)';
+                }
+            } elseif (in_array('numero_muestra', $columnas, true)) {
+                $exprNumero = 'CAST(t.numero_muestra AS CHAR)';
+            }
+
+            if (!$exprLote || !$exprNumero) {
+                return [];
+            }
+
+            $stmt = $pdo->query("
+                SELECT DISTINCT {$exprLote} AS codigo_lote, {$exprNumero} AS numero_lab
+                  FROM `{$tabla}` t
+                  {$joinLote}
+                  {$joinMuestra}
+                 WHERE {$exprLote} IS NOT NULL
+                   AND {$exprLote} <> ''
+                   AND {$exprNumero} IS NOT NULL
+                   AND {$exprNumero} <> ''
+            ");
+
+            $usadas = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $lote = trim((string) ($row['codigo_lote'] ?? ''));
+                $numero = trim((string) ($row['numero_lab'] ?? ''));
+                if ($lote === '' || $numero === '') {
+                    continue;
+                }
+
+                $usadas[$lote] ??= [];
+                if (!in_array($numero, $usadas[$lote], true)) {
+                    $usadas[$lote][] = $numero;
+                }
+            }
+
+            return $usadas;
         } catch (Throwable $e) {
             return [];
         }
@@ -353,7 +442,6 @@ if (!function_exists('labFooterMuestrasPorLote')) {
                    AND l.codigo_lote <> ''
                    AND (m.codigo_lab IS NOT NULL OR m.numero_muestra IS NOT NULL)
                    {$whereContexto}
-                   " . ($contexto ? 'AND ' . labFooterPendienteAnalisisSql('lr', 'ta') : '') . "
                  ORDER BY l.codigo_lote, m.numero_muestra, m.codigo_lab
             ");
             $stmt->execute($params);
@@ -412,7 +500,6 @@ if (!function_exists('labFooterDestinoFormulario')) {
                  WHERE l.codigo_lote = ?
                    AND {$condiciones['tipo']}
                    AND {$condiciones['analisis']}
-                   AND " . labFooterPendienteAnalisisSql('lr', 'ta') . "
                  ORDER BY s.id_solicitud DESC, lr.id_rango DESC
                  LIMIT 1
             ");
@@ -435,7 +522,6 @@ if (!function_exists('labFooterDestinoFormulario')) {
                           ON ta.id_tipo_muestra = tm.id_tipo
                          AND {$fallbackCondiciones['analisis']}
                  WHERE l.codigo_lote = ?
-                   AND " . labFooterPendienteAnalisisSql('lr', 'ta') . "
                  ORDER BY lr.id_rango DESC
                  LIMIT 1
             ");
@@ -680,14 +766,16 @@ if (!function_exists('labFooterAdjuntarFilasAnalisisLegacy')) {
                 $params[] = $numeroLab;
             }
 
+            $numeroLabNormalizado = labFooterExtractNumeroLaboratorio($numeroLab);
+
             if (in_array('numero_laboratorio', $columnas, true)) {
                 $sets[] = '`numero_laboratorio` = ?';
-                $params[] = preg_match('/^-?\d+$/', $numeroLab) ? (int) $numeroLab : null;
+                $params[] = $numeroLabNormalizado;
             }
 
             if (in_array('numero_muestra', $columnas, true)) {
                 $sets[] = '`numero_muestra` = ?';
-                $params[] = preg_match('/^-?\d+$/', $numeroLab) ? (int) $numeroLab : null;
+                $params[] = $numeroLabNormalizado;
             }
 
             $params[] = (int) $fila['id'];
@@ -726,6 +814,10 @@ if (!function_exists('labFooterGuardarFormularioBase')) {
 
             $destino = labFooterDestinoFormulario($contexto, $codigoLote);
             if (!$destino) {
+                if (labFooterContextoEsPorMuestra($contexto)) {
+                    return ['ok' => false, 'message' => 'No se pudo resolver el formulario para ese lote y muestra.'];
+                }
+
                 if (labFooterAnalisisYaIngresado($contexto, $codigoLote)) {
                     return ['ok' => false, 'message' => 'El lote ' . $codigoLote . ' ya tiene este analisis ingresado.'];
                 }
@@ -837,8 +929,19 @@ if (!function_exists('labFooterGuardarFormulariosBase')) {
 
 $labFooterContexto = labFooterContextoAnalisis();
 $labFooterLotesContexto = labFooterLotesPorAnalisis($labFooterContexto);
-$labFooterLotes = $labFooterLotesContexto ?: labFooterTodosLosLotes();
-$labFooterMuestras = labFooterMuestrasPorLote($labFooterContexto);
+$labFooterMuestrasContexto = labFooterMuestrasPorLote($labFooterContexto);
+$labFooterMuestrasFallback = labFooterMuestrasPorLote(null);
+$labFooterMuestras = $labFooterContexto ? $labFooterMuestrasContexto : $labFooterMuestrasFallback;
+$labFooterLotes = $labFooterContexto ? $labFooterLotesContexto : array_keys($labFooterMuestras);
+if (!$labFooterLotes) {
+    $labFooterMuestras = $labFooterMuestrasFallback;
+    $labFooterLotes = array_keys($labFooterMuestras);
+}
+if (!$labFooterLotes) {
+    $labFooterLotes = labFooterTodosLosLotes();
+}
+sort($labFooterLotes);
+$labFooterMuestrasUsadas = labFooterMuestrasUsadasPorTablaActual();
 $fecha_actual_footer = trim((string) ($_POST['fecha'] ?? date('Y-m-d')));
 $analista_actual = trim((string) ($_POST['analista'] ?? $_POST['tecnico'] ?? ''));
 $observaciones = trim((string) ($_POST['observaciones'] ?? $observaciones ?? ''));
@@ -894,6 +997,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $labFooterContexto && empty
     data-lab-table-config><?= json_encode([
       'lotes' => $labFooterLotes,
       'muestras' => $labFooterMuestras,
+      'muestrasUsadas' => $labFooterMuestrasUsadas,
       'loteActual' => $lote_actual,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 

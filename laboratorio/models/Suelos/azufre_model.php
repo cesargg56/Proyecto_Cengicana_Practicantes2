@@ -4,9 +4,8 @@ require_once __DIR__ . '/../conexion.php';
 $conexion = new Conexion();
 $conn = $conexion->conectar();
 
-// GUARDAR ANÁLISIS DE AZUFRE
-function guardarAzufre($abs_blanco, $absorbancia, $ppm_so4, $control) {
-
+function guardarAzufre($abs_blanco, $absorbancia, $ppm_so4, $control, array $metadata = [])
+{
     global $conn;
 
     $stmt = $conn->prepare(
@@ -15,26 +14,25 @@ function guardarAzufre($abs_blanco, $absorbancia, $ppm_so4, $control) {
         VALUES (?, ?, ?, ?)"
     );
 
-    if ($stmt->execute([$abs_blanco, $absorbancia, $ppm_so4, $control])) {
+    $ok = $stmt->execute([$abs_blanco, $absorbancia, $ppm_so4, $control]);
+    $id = $ok ? (int) $conn->lastInsertId() : false;
 
+    if ($id !== false) {
         return [
-            "exito" => true,
-            "mensaje" => "Azufre guardado correctamente.",
-            "id" => (int) $conn->lastInsertId()
-        ];
-
-    } else {
-
-        return [
-            "exito" => false,
-            "mensaje" => "Error al guardar."
+            'exito' => true,
+            'mensaje' => 'Azufre guardado correctamente.',
+            'id' => $id,
         ];
     }
+
+    return [
+        'exito' => false,
+        'mensaje' => 'Error al guardar.',
+    ];
 }
 
-// GUARDAR PUNTO DE CURVA
-function guardarCurvaAzufre($punto_curva, $absorbancia) {
-
+function guardarCurvaAzufre($punto_curva, $absorbancia)
+{
     global $conn;
 
     $stmt = $conn->prepare(
@@ -44,17 +42,14 @@ function guardarCurvaAzufre($punto_curva, $absorbancia) {
     );
 
     if ($stmt->execute([$punto_curva, $absorbancia])) {
-
         return (int) $conn->lastInsertId();
-
-    } else {
-
-        return false;
     }
-}
-// RELACIONAR Azufre ↔ CURVA
-function relacionarAzufreCurva($id_azufre, $id_curva) {
 
+    return false;
+}
+
+function relacionarAzufreCurva($id_azufre, $id_curva)
+{
     global $conn;
 
     $stmt = $conn->prepare(
@@ -66,8 +61,8 @@ function relacionarAzufreCurva($id_azufre, $id_curva) {
     return $stmt->execute([$id_azufre, $id_curva]);
 }
 
-function obtenerCurvaAzufre($id_azufre) {
-
+function obtenerCurvaAzufre($id_azufre)
+{
     global $conn;
 
     $sql = "
@@ -75,22 +70,19 @@ function obtenerCurvaAzufre($id_azufre) {
             ca.punto_curva,
             ca.absorbancia
         FROM curva_azufre ca
-
         INNER JOIN suelo_azufre_curva ac
             ON ca.id_curva = ac.id_curva_azufre
-
         WHERE ac.id_azufre = ?
     ";
 
     $stmt = $conn->prepare($sql);
-
     $stmt->execute([$id_azufre]);
 
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function obtenerHistorialAzufre() {
-
+function obtenerHistorialAzufre()
+{
     global $conn;
 
     $sql = "
@@ -101,7 +93,6 @@ function obtenerHistorialAzufre() {
             ppm_so4,
             control
         FROM suelo_azufre
-
         ORDER BY id DESC
     ";
 

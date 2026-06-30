@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../models/conexion.php';
 require_once __DIR__ . '/../../models/Aguas/micros_model.php';
 
-$resultado = null;
+$resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -60,5 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resultado['mn_mgl'] = $mn_mgl;
 }
 
+lab_analysis_redirect_after_success($resultado);
 require_once __DIR__ . '/../../view/Aguas/micros_view.php';
 ?>

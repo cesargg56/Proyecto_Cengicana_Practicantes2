@@ -1,17 +1,17 @@
-(function () {
+﻿(function () {
   const DATA_SELECTOR = 'script[data-lab-table-config]';
   const SKIP_TYPES = new Set(['hidden', 'submit', 'button', 'reset']);
 
   function parseConfig(form) {
     const configNode = form.querySelector(DATA_SELECTOR);
     if (!configNode) {
-      return { lotes: [], muestras: {}, loteActual: '' };
+      return { lotes: [], muestras: {}, muestrasUsadas: {}, loteActual: '' };
     }
 
     try {
       return JSON.parse(configNode.textContent || '{}');
     } catch (error) {
-      return { lotes: [], muestras: {}, loteActual: '' };
+      return { lotes: [], muestras: {}, muestrasUsadas: {}, loteActual: '' };
     }
   }
 
@@ -41,6 +41,55 @@
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
+  }
+
+  function normalizedValue(value) {
+    return (value || '').toString().trim();
+  }
+
+  function normalizedObjectLookup(source, key) {
+    if (!source || typeof source !== 'object') {
+      return undefined;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      return source[key];
+    }
+
+    const trimmedKey = normalizedValue(key);
+    if (trimmedKey && Object.prototype.hasOwnProperty.call(source, trimmedKey)) {
+      return source[trimmedKey];
+    }
+
+    const match = Object.keys(source).find((candidate) => normalizedValue(candidate) === trimmedKey);
+    return match ? source[match] : undefined;
+  }
+
+  function lotesFromConfig(config) {
+    const lotes = Array.isArray(config.lotes) ? config.lotes : [];
+    const merged = [...lotes, ...Object.keys(config.muestras || {})];
+    const seen = new Set();
+
+    return merged
+      .map((value) => normalizedValue(value))
+      .filter((value) => {
+        if (!value || seen.has(value)) {
+          return false;
+        }
+
+        seen.add(value);
+        return true;
+      });
+  }
+
+  function muestrasForLote(muestras, lote) {
+    const values = normalizedObjectLookup(muestras, lote);
+    return Array.isArray(values) ? values : [];
+  }
+
+  function muestrasUsadasForLote(muestrasUsadas, lote) {
+    const values = normalizedObjectLookup(muestrasUsadas, lote);
+    return Array.isArray(values) ? values : [];
   }
 
   function isSharedAnalysisControl(control) {
@@ -109,6 +158,16 @@
     return input;
   }
 
+  function buildPlaceholderInput(name, rowIndex) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = `${name}[]`;
+    input.value = '';
+    input.dataset.baseName = name;
+    input.dataset.rowIndex = String(rowIndex);
+    return input;
+  }
+
   function fillLoteOptions(select, lotes, selected) {
     select.innerHTML = '';
 
@@ -127,39 +186,27 @@
   }
 
   function buildLaboratorioSpecialOptions(definitions) {
-    const usedValues = new Set();
-
-    return definitions
-      .map((definition, index) => {
-        const searchable = normalizeText(`${definition.name || ''} ${definition.label || ''}`);
-        const isBlank = searchable.includes('blanco') || /(^|[_\s-])blk([_\s-]|$)/.test(searchable);
-        const isControl = /(^|[_\s-])control([_\s-]|$)/.test(searchable);
-
-        return {
-          definition,
-          index,
-          order: isBlank ? 0 : (isControl ? 1 : 2),
-        };
-      })
-      .sort((left, right) => left.order - right.order || left.index - right.index)
-      .reduce((options, { definition }) => {
-        const label = (definition.label || definition.name || '').trim();
-        if (!label || usedValues.has(label)) {
-          return options;
-        }
-
-        usedValues.add(label);
-        options.push({ value: label, label });
-        return options;
-      }, []);
+    return definitions.map((definition) => ({
+      value: `__shared__:${definition.name}`,
+      label: definition.label,
+    }));
   }
 
-  function laboratorioValues(muestras, lote, specialOptions = []) {
+  function sharedRowDefinitions(definitions) {
+    return definitions.map((definition) => ({
+      value: `__shared__:${definition.name}`,
+      label: definition.label,
+      definition,
+    }));
+  }
+
+  function laboratorioValues(muestras, lote, specialOptions = [], muestrasUsadas = {}) {
     if (!lote) {
       return [''];
     }
 
     const usedValues = new Set(['']);
+    const usedInDatabase = new Set(muestrasUsadasForLote(muestrasUsadas, lote).map((value) => String(value).trim()).filter(Boolean));
     const values = [];
 
     specialOptions.forEach(({ value }) => {
@@ -172,9 +219,9 @@
       values.push(normalized);
     });
 
-    (muestras[lote] || []).forEach((numero) => {
+    muestrasForLote(muestras, lote).forEach((numero) => {
       const value = String(numero || '').trim();
-      if (!value || usedValues.has(value)) {
+      if (!value || usedValues.has(value) || usedInDatabase.has(value)) {
         return;
       }
 
@@ -185,13 +232,19 @@
     return values.length ? values : [''];
   }
 
-  function fillLaboratorioOptions(select, muestras, lote, preferred, specialOptions = []) {
-    const values = muestras[lote] || [];
+  function firstAvailableLaboratorioValue(select) {
+    const firstEnabled = Array.from(select.options).find((option) => option.value && !option.disabled);
+    return firstEnabled ? firstEnabled.value : '';
+  }
+
+  function fillLaboratorioOptions(select, muestras, lote, preferred, specialOptions = [], muestrasUsadas = {}) {
+    const values = muestrasForLote(muestras, lote);
+    const usedInDatabase = new Set(muestrasUsadasForLote(muestrasUsadas, lote).map((value) => String(value).trim()).filter(Boolean));
     select.innerHTML = '';
 
     const empty = document.createElement('option');
     empty.value = '';
-    empty.textContent = values.length || specialOptions.length ? 'Seleccione' : 'Sin número';
+    empty.textContent = values.length || specialOptions.length ? 'Seleccione' : 'Sin nÃºmero';
     select.appendChild(empty);
 
     const usedValues = new Set(['']);
@@ -213,10 +266,16 @@
       const option = document.createElement('option');
       option.value = value;
       option.textContent = value;
+      option.disabled = usedInDatabase.has(value);
       option.selected = value === preferred;
       select.appendChild(option);
       usedValues.add(value);
     });
+
+    const hasPreferred = preferred && Array.from(select.options).some((option) => option.value === preferred && !option.disabled);
+    if (!hasPreferred) {
+      select.value = firstAvailableLaboratorioValue(select);
+    }
   }
 
   function laboratorioKey(row) {
@@ -268,7 +327,7 @@
       });
 
       labSelect.setCustomValidity(hasDuplicate
-        ? 'Este número de laboratorio ya fue seleccionado para este lote.'
+        ? 'Este nÃºmero de laboratorio ya fue seleccionado para este lote.'
         : '');
     });
   }
@@ -626,14 +685,18 @@
   }
 
   function createRow({
-    definitions,
+    columnDefinitions,
     lotes,
     muestras,
+    muestrasUsadas,
     selectedLote,
     selectedLaboratorio,
     rowIndex,
     groupId,
     specialOptions,
+    rowDefinitions,
+    fixedLaboratorioLabel,
+    fixedLaboratorioValue,
     onLoteChange,
   }) {
     const row = document.createElement('tr');
@@ -654,10 +717,31 @@
     row.appendChild(loteCell);
 
     const labCell = document.createElement('td');
-    const labSelect = document.createElement('select');
-    labSelect.name = 'numero_laboratorio[]';
-    fillLaboratorioOptions(labSelect, muestras, loteSelect.value, selectedLaboratorio || '', specialOptions);
-    labCell.appendChild(labSelect);
+    let labSelect = null;
+    if (fixedLaboratorioLabel) {
+      const badge = document.createElement('span');
+      badge.textContent = fixedLaboratorioLabel;
+      badge.className = 'lab-fixed-row-label';
+      Object.assign(badge.style, {
+        display: 'inline-flex',
+        alignItems: 'center',
+        minHeight: '28px',
+        fontWeight: '600',
+      });
+
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'numero_laboratorio[]';
+      hiddenInput.value = fixedLaboratorioValue || '';
+
+      labCell.appendChild(badge);
+      labCell.appendChild(hiddenInput);
+    } else {
+      labSelect = document.createElement('select');
+      labSelect.name = 'numero_laboratorio[]';
+      fillLaboratorioOptions(labSelect, muestras, loteSelect.value, selectedLaboratorio || '', specialOptions, muestrasUsadas);
+      labCell.appendChild(labSelect);
+    }
     row.appendChild(labCell);
 
     loteSelect.addEventListener('change', () => {
@@ -666,17 +750,39 @@
         return;
       }
 
-      fillLaboratorioOptions(labSelect, muestras, loteSelect.value, selectedLaboratorio || '', specialOptions);
+      if (labSelect) {
+        fillLaboratorioOptions(labSelect, muestras, loteSelect.value, '', specialOptions, muestrasUsadas);
+      }
       updateLaboratorioAvailability(row.parentElement);
     });
 
-    labSelect.addEventListener('change', () => {
-      updateLaboratorioAvailability(row.parentElement);
-    });
+    if (labSelect) {
+      labSelect.addEventListener('change', () => {
+        updateLaboratorioAvailability(row.parentElement);
+      });
+    }
 
-    definitions.forEach((definition) => {
+    const activeDefinitions = Array.isArray(rowDefinitions) && rowDefinitions.length
+      ? rowDefinitions
+      : columnDefinitions;
+    const isSharedRow = Boolean(fixedLaboratorioLabel);
+
+    columnDefinitions.forEach((definition, index) => {
       const cell = document.createElement('td');
-      cell.appendChild(buildDataInput(definition, rowIndex));
+      let rowDefinition = null;
+      if (isSharedRow) {
+        rowDefinition = activeDefinitions[index] || null;
+      } else {
+        rowDefinition = activeDefinitions.find((item) => item.name === definition.name);
+      }
+      if (rowDefinition) {
+        cell.appendChild(buildDataInput(rowDefinition, rowIndex));
+        if (isSharedRow && rowDefinition.name !== definition.name) {
+          cell.appendChild(buildPlaceholderInput(definition.name, rowIndex));
+        }
+      } else {
+        cell.appendChild(buildPlaceholderInput(definition.name, rowIndex));
+      }
       row.appendChild(cell);
     });
 
@@ -684,7 +790,7 @@
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'lab-table-icon-button';
-    removeButton.textContent = '×';
+    removeButton.textContent = 'X';
     removeButton.title = 'Quitar fila';
     removeButton.addEventListener('click', () => {
       const tbody = row.parentElement;
@@ -709,6 +815,8 @@
     const footer = form.querySelector('.form-footer');
     const formBody = form.querySelector('.form-body') || form;
     const config = parseConfig(form);
+    const lotes = lotesFromConfig(config);
+    const useSharedRows = form.dataset.labSharedRows === '1';
     const primaryControls = Array.from(formBody.querySelectorAll('input, select, textarea'))
       .filter((control) => isPrimaryControl(control, footer));
     const controls = primaryControls.filter((control) => !isSharedAnalysisControl(control));
@@ -728,16 +836,21 @@
       label: getControlLabel(control),
       template: control.cloneNode(true),
     }));
-    const laboratorioSpecialOptions = buildLaboratorioSpecialOptions(sharedDefinitions);
+    const laboratorioSpecialOptions = [];
+    const fixedSharedRows = useSharedRows ? sharedRowDefinitions(sharedDefinitions) : [];
+    const columnDefinitions = definitions;
 
-    primaryControls.forEach(hideOriginal);
+    controls.forEach(hideOriginal);
+    if (useSharedRows) {
+      sharedControls.forEach(hideOriginal);
+    }
     cleanupOriginalLayout(formBody);
 
     const wrapper = document.createElement('section');
     wrapper.className = 'lab-table-panel';
     wrapper.innerHTML = `
       <div class="lab-table-toolbar">
-        <div class="section-title">Datos de análisis por muestra</div>
+        <div class="section-title">Datos de anÃ¡lisis por muestra</div>
         <div class="lab-table-actions">
           <button type="button" class="lab-table-button" data-add-row>+ Agregar fila</button>
           <button type="button" class="lab-table-button" data-add-lote>+ Agregar lote</button>
@@ -754,30 +867,58 @@
     `;
 
     const header = wrapper.querySelector('thead tr');
-    ['#', 'Lote', 'Número de laboratorio', ...definitions.map((definition) => definition.label), ''].forEach((label) => {
+    ['#', 'Lote', 'Numero de laboratorio', ...columnDefinitions.map((definition) => definition.label), ''].forEach((label) => {
       const th = document.createElement('th');
       th.textContent = label;
       header.appendChild(th);
-    });
-
+    })
     const tbody = wrapper.querySelector('tbody');
     let loteGroupCounter = 0;
 
-    const buildRowsForLote = (selectedLote, groupId) => laboratorioValues(
-      config.muestras || {},
-      selectedLote,
-      laboratorioSpecialOptions
-    ).map((numeroLaboratorio) => createRow({
-      definitions,
-      lotes: config.lotes || [],
-      muestras: config.muestras || {},
-      selectedLote,
-      selectedLaboratorio: numeroLaboratorio,
-      rowIndex: dataRows(tbody).length,
-      groupId,
-      specialOptions: laboratorioSpecialOptions,
-      onLoteChange: replaceLoteGroup,
-    }));
+    const buildRowsForLote = (selectedLote, groupId) => {
+      const rows = [];
+
+      fixedSharedRows.forEach((sharedRow) => {
+        rows.push(createRow({
+          columnDefinitions,
+          lotes,
+          muestras: config.muestras || {},
+          muestrasUsadas: config.muestrasUsadas || {},
+          selectedLote,
+          selectedLaboratorio: '',
+          rowIndex: dataRows(tbody).length + rows.length,
+          groupId,
+          specialOptions: laboratorioSpecialOptions,
+          rowDefinitions: [sharedRow.definition],
+          fixedLaboratorioLabel: sharedRow.label,
+          fixedLaboratorioValue: sharedRow.value,
+          onLoteChange: replaceLoteGroup,
+        }));
+      });
+
+      laboratorioValues(
+        config.muestras || {},
+        selectedLote,
+        laboratorioSpecialOptions,
+        config.muestrasUsadas || {}
+      ).forEach((numeroLaboratorio) => {
+        rows.push(createRow({
+          columnDefinitions,
+          lotes,
+          muestras: config.muestras || {},
+          muestrasUsadas: config.muestrasUsadas || {},
+          selectedLote,
+          selectedLaboratorio: numeroLaboratorio,
+          rowIndex: dataRows(tbody).length + rows.length,
+          groupId,
+          specialOptions: laboratorioSpecialOptions,
+          rowDefinitions: definitions,
+          onLoteChange: replaceLoteGroup,
+        }));
+      });
+
+      return rows;
+    };
 
     const appendLoteGroup = (selectedLote, existingGroupId) => {
       const groupId = existingGroupId || String(loteGroupCounter);
@@ -813,20 +954,22 @@
       updateLaboratorioAvailability(tbody);
     }
 
-    appendLoteGroup(config.loteActual || (config.lotes || [])[0] || '');
+    appendLoteGroup(normalizedValue(config.loteActual) || lotes[0] || '');
 
     wrapper.querySelector('[data-add-row]').addEventListener('click', () => {
       const lastRow = lastDataRow(tbody);
-      const lastLote = lastRow?.querySelector('select[name="lote[]"]')?.value || config.loteActual || '';
+      const lastLote = lastRow?.querySelector('select[name="lote[]"]')?.value || normalizedValue(config.loteActual) || '';
       tbody.appendChild(createRow({
-        definitions,
-        lotes: config.lotes || [],
+        columnDefinitions,
+        lotes,
         muestras: config.muestras || {},
+        muestrasUsadas: config.muestrasUsadas || {},
         selectedLote: lastLote,
         selectedLaboratorio: '',
         rowIndex: dataRows(tbody).length,
         groupId: lastRow?.dataset.loteGroup || '',
         specialOptions: laboratorioSpecialOptions,
+        rowDefinitions: definitions,
         onLoteChange: replaceLoteGroup,
       }));
       reindexRows(tbody);
@@ -834,8 +977,8 @@
     });
 
     wrapper.querySelector('[data-add-lote]').addEventListener('click', () => {
-      const lastLote = lastDataRow(tbody)?.querySelector('select[name="lote[]"]')?.value || config.loteActual || '';
-      appendLoteGroup(nextLote(config.lotes || [], lastLote));
+      const lastLote = lastDataRow(tbody)?.querySelector('select[name="lote[]"]')?.value || normalizedValue(config.loteActual) || '';
+      appendLoteGroup(nextLote(lotes, lastLote));
     });
 
     form.addEventListener('submit', (event) => {
@@ -860,3 +1003,4 @@
     document.querySelectorAll('form').forEach(initForm);
   });
 })();
+

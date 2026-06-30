@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../models/conexion.php';
 require_once __DIR__ . '/../../models/Cana/brixpol_model.php';
 
-$resultado = null;
+$resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -62,5 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resultado['porcentaje_pol_cana'] = $porcentaje_pol_cana;
 }
 
+lab_analysis_redirect_after_success($resultado);
 require_once __DIR__ . '/../../view/Cana/brixpol_view.php';
 ?>

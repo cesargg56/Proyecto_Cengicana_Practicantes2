@@ -15,7 +15,7 @@ $errorMensaje = '';
 $mapeoAnalisisSuelos = [
     'suelos-textura' => ['nombre' => 'Textura', 'tabla' => 'analisis_textura', 'tipo' => 'fisico'],
     'suelos-humedad' => ['nombre' => 'Humedad', 'tabla' => 'suelo_humedad', 'tipo' => 'fisico'],
-    'suelos-humedad-residual' => ['nombre' => 'Humedad Residual', 'tabla' => 'laboratorio_humedad', 'tipo' => 'fisico'],
+    'suelos-humedad-residual' => ['nombre' => 'Humedad Gravimetrica', 'tabla' => 'laboratorio_humedad', 'tipo' => 'fisico'],
     'suelos-dap' => ['nombre' => 'DAP (Densidad Aparente)', 'tabla' => 'suelo_dap', 'tipo' => 'fisico'],
     'suelos-cc' => ['nombre' => 'Capacidad de Campo', 'tabla' => 'suelo_cc', 'tipo' => 'fisico'],
     'suelos-pmp' => ['nombre' => 'Punto de Marchitez', 'tabla' => 'suelo_pmp', 'tipo' => 'fisico'],

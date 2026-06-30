@@ -10,7 +10,7 @@ $doc_edicion   = "03";
 $doc_vf        = "V2";
 
 $fecha_actual  = date('d-m-Y');
-$lote_actual   = "LT-2025-083";
+$lote_actual   = $_POST['lote'][0] ?? $_GET['lote'] ?? ($lote_actual ?? '');
 $tecnicos      = [
     ['id' => 1, 'nombre' => 'Ana López Méndez'],
     ['id' => 2, 'nombre' => 'Carlos Ruiz'],
@@ -42,7 +42,7 @@ $resultado = $resultado ?? [];
 
         <?php include '../../components/encabezado_doc.php'; ?>
 
-    <form method="POST" action="">
+    <form method="POST" action="" data-lab-shared-rows="1">
         <div class="form-body">
 
         <div class="section-title">Datos de análisis</div>
@@ -81,7 +81,6 @@ $resultado = $resultado ?? [];
                             <tr><td><input type="number" name="punto_curva[]" value="8"></td><td><input type="number" step="any" name="abs_curva[]"></td></tr>
                             <tr><td><input type="number" name="punto_curva[]" value="10"></td><td><input type="number" step="any" name="abs_curva[]"></td></tr>
                             <tr><td><input type="number" name="punto_curva[]" value="10"></td><td><input type="number" step="any" name="abs_curva[]"></td></tr>
-                        </tbody>
                         </tbody>
                     </table>
                 </div>

@@ -446,6 +446,7 @@ CREATE TABLE suelo_fosforo (
     absorbancia DECIMAL(10,4),
     ppm_solucion DECIMAL(10,4),
     ppm_suelo DECIMAL(10,4),
+    control DECIMAL(10,4),
     FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
 );
 
@@ -483,7 +484,9 @@ CREATE TABLE suelo_nitrogeno (
     hcl_blanco DECIMAL(10,4),
     hcl_muestra DECIMAL(10,4),
     porcentaje_n DECIMAL(10,4),
+    normalidad DECIMAL(10,4),
     x_nitrogeno VARCHAR(255),
+    control DECIMAL(10,4),
     FOREIGN KEY (id_formulario) REFERENCES formulario(id_formulario)
 );
 

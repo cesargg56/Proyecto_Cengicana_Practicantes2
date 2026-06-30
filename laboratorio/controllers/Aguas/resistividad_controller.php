@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../models/Aguas/resistividad_model.php';
 $conexion = new Conexion();
 $conn = $conexion->conectar();
 
-$resultado = null;
+$resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -28,5 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resultado = lab_resultado_multiple($resultados, 'resistividad');
 }
 
+lab_analysis_redirect_after_success($resultado);
 require_once __DIR__ . '/../../view/Aguas/resistividad_view.php';
 ?>
