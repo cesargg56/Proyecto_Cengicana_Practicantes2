@@ -94,21 +94,7 @@
 
   function isSharedAnalysisControl(control) {
     const scope = (control.dataset.labScope || '').toLowerCase();
-    if (scope === 'row') {
-      return false;
-    }
-
-    if (scope === 'single' || control.dataset.labSingle === '1') {
-      return true;
-    }
-
-    const name = normalizeText(control.name);
-    const label = normalizeText(getControlLabel(control));
-    const searchable = `${name} ${label}`;
-
-    return /(^|[_\s-])(control|blanco|blancos|blk)([_\s-]|$)/.test(searchable)
-      || name.includes('blanco')
-      || name.startsWith('blk_');
+    return scope === 'single' || control.dataset.labSingle === '1';
   }
 
   function isPrimaryControl(control, footer) {
