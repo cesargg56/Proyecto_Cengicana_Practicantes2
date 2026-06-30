@@ -41,11 +41,6 @@ $resultado = $resultado ?? [];
                     <div class="field">
                         <label>Peso muestra<input type="number" step="any" name="peso_muestra"></label>
                         <label>Sulfato ferroso consumido<input type="number" step="any" name="sulfato_ferroso_consumido"></label>
-                        <label>M1 dicromato<input type="number" step="any" name="m1_dicromato"></label>
-                        <label>M2 dicromato<input type="number" step="any" name="m2_dicromato"></label>
-                        <label>Dicromato potasio<input type="number" step="any" name="dicromato_potasio"></label>
-                        <label>Blanco sulfato ferroso<input type="number" step="any" name="blanco_sulfato_ferroso"></label>
-                        <label>Blanco sulfato ferroso 2<input type="number" step="any" name="blanco_sulfato_ferroso_2"></label>
                     </div>
                 </div>
                 <?php include '../../components/pie_pagina.php'; ?>

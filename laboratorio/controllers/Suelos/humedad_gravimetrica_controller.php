@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pesoCaja = lab_post_float('PesoCaja', $fila);
         $pesoCajaMseca = lab_post_float('PesoCajaMseca', $fila);
         $pesoHumedo = lab_post_float('PesoHumedo', $fila);
-        $pesoCajaMHumeda = $pesoCaja + $pesoHumedo;
+        $pesoCajaMHumeda = $pesoCajaMHumeda - $pesoCaja;
         $pesoSeco = $pesoCajaMseca - $pesoCaja;
         $humedadGravimetrica = $pesoHumedo != 0
             ? ((($pesoCajaMHumeda - $pesoCajaMseca) * 100) / $pesoHumedo)

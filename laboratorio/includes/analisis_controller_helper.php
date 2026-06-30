@@ -62,11 +62,13 @@ if (!function_exists('lab_controller_collect_generic_rows')) {
                 break;
 
             case 'suelos.mo':
+                $row['m1_dicromato'] = 1.04;
+                $row['m2_dicromato'] = 1.04;
                 $row['val_solucion_ferroso'] = (($row['m1_dicromato'] ?? 0) + ($row['m2_dicromato'] ?? 0)) / 2;
+                $row['ml_util_sulfato_ferroso1N'] = 10.50;
                 $row['normalidad_sulfato_ferroso'] = ($row['val_solucion_ferroso'] ?? 0) != 0
-                    ? (($row['dicromato_potasio'] ?? 0) / $row['val_solucion_ferroso'])
+                    ? ((1.0 * 1.0) / $row['val_solucion_ferroso'])
                     : 0;
-                $row['ml_util_sulfato_ferroso1N'] = (($row['blanco_sulfato_ferroso'] ?? 0) + ($row['blanco_sulfato_ferroso_2'] ?? 0)) / 2;
                 $row['dicromato_consumido'] = $row['val_solucion_ferroso'] ?? 0;
                 $row['porcentaje_carbono_organico'] = ($row['peso_muestra'] ?? 0) != 0
                     ? ((($row['ml_util_sulfato_ferroso1N'] ?? 0) - ($row['sulfato_ferroso_consumido'] ?? 0))
