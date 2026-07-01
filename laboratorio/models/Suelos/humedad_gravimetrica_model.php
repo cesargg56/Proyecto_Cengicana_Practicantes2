@@ -2,30 +2,49 @@
 
 require_once __DIR__ . '/../conexion.php';
 
-function guardarHumedadGravimetrica(array $data = []): array
+function guardarHumedadGravimetrica(array $data, array $metadata = []): array
 {
     $conn = (new Conexion())->conectar();
 
-    $stmt = $conn->prepare(
-        "INSERT INTO laboratorio_humedad
-        (NoCaja, PesoCaja, PesoCajaMHumeda, PesoCajaMseca, PesoSeco, PesoHumedo, PorHGrav)
-        VALUES (?, ?, ?, ?, ?, ?, ?)"
-    );
+    $stmt = $conn->prepare("
+        INSERT INTO suelo_humedad_gravimetrica
+        (
+            id_formulario,
+            no_lab,
+            no_caja,
+            peso_caja,
+            peso_caja_muestra_humeda,
+            peso_caja_muestra_seca,
+            peso_suelo_humedo,
+            peso_suelo_seco,
+            h_grav
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
 
     $ok = $stmt->execute([
-        $data['NoCaja'] ?? 0,
+        $metadata['id_formulario'] ?? null,
+        $metadata['no_lab'] ?? null,
+
+        $data['NoCaja'] ?? null,
         $data['PesoCaja'] ?? 0,
         $data['PesoCajaMHumeda'] ?? 0,
         $data['PesoCajaMseca'] ?? 0,
-        $data['PesoSeco'] ?? 0,
         $data['PesoHumedo'] ?? 0,
+        $data['PesoSeco'] ?? 0,
         $data['PorHGrav'] ?? 0,
     ]);
-    $id = $ok ? (int) $conn->lastInsertId() : false;
 
-    if ($id !== false) {
-        return ['exito' => true, 'mensaje' => 'Humedad gravimetrica guardada correctamente.', 'id' => $id];
+    if ($ok) {
+        return [
+            'exito' => true,
+            'mensaje' => 'Humedad gravimétrica guardada correctamente.',
+            'id' => (int)$conn->lastInsertId()
+        ];
     }
 
-    return ['exito' => false, 'mensaje' => 'Error al guardar humedad gravimetrica.'];
+    return [
+        'exito' => false,
+        'mensaje' => 'Error al guardar humedad gravimétrica.'
+    ];
 }

@@ -39,12 +39,10 @@ $resultado = $resultado ?? [];
                 <div class="section-title">Datos de analisis</div>
                 <div class="field-group">
                     <div class="field">
-                        <label>Blanco<input type="number" step="any" name="blanco"></label>
                         <label>Control<input type="number" step="any" name="control"></label>
-                        <label>No. caja<input type="number" step="any" name="NoCaja"></label>
                         <label>Peso caja<input type="number" step="any" name="PesoCaja"></label>
+                        <label>Peso Muestra humeda<input type="number" step="any" name="PesoMuestraHumedo"></label>
                         <label>Peso caja + muestra seca<input type="number" step="any" name="PesoCajaMseca"></label>
-                        <label>Peso humedo<input type="number" step="any" name="PesoHumedo"></label>
                     </div>
                 </div>
                 <?php include '../../components/pie_pagina.php'; ?>

@@ -23,20 +23,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             continue;
         }
 
+        $control = lab_post_float('control', $fila);
         $pesoCaja = lab_post_float('PesoCaja', $fila);
         $pesoCajaMseca = lab_post_float('PesoCajaMseca', $fila);
-        $pesoHumedo = lab_post_float('PesoHumedo', $fila);
-        $pesoCajaMHumeda = $pesoCaja + $pesoHumedo;
-        $pesoSeco = $pesoCajaMseca - $pesoCaja;
-        $porHGrav = $pesoHumedo != 0 ? ((($pesoCajaMHumeda - $pesoCajaMseca) * 100) / $pesoHumedo) : 0;
+        $PesoMuestraHumedo = lab_post_float('PesoMuestraHumedo', $fila);
+        $pesoCajaMHumeda = $pesoCaja + $PesoMuestraHumedo;
+        $porHGrav = $PesoMuestraHumedo != 0 ? ((($pesoCajaMHumeda - $pesoCajaMseca) * 100) / $PesoMuestraHumedo) : 0;
 
         $resultados[] = guardarHumedadResidualSuelo([
-            'NoCaja' => lab_post_float('NoCaja', $fila),
+            'Control' => $control,
             'PesoCaja' => $pesoCaja,
             'PesoCajaMHumeda' => $pesoCajaMHumeda,
             'PesoCajaMseca' => $pesoCajaMseca,
-            'PesoSeco' => $pesoSeco,
-            'PesoHumedo' => $pesoHumedo,
+            'PesoMuestraHumedo' => $PesoMuestraHumedo,
             'PorHGrav' => $porHGrav,
         ]);
     }
