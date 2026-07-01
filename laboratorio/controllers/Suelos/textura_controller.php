@@ -3,17 +3,23 @@ require_once __DIR__ . '/../../includes/auth.php';
 lab_require_analysis_access('suelos.textura');
 
 require_once __DIR__ . '/../../includes/analisis_post_helper.php';
+require_once __DIR__ . '/../../includes/shared_lot_controls_helper.php';
 require_once __DIR__ . '/../../models/Suelos/textura_model.php';
 
 $resultado = lab_analysis_take_flash();
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    $campos = ['porcentaje_hr', 'lectura_1', 'temp_1', 'lectura_2', 'temp_2'];
+    $campos = ['blanco', 'control', 'porcentaje_hr', 'lectura_1', 'temp_1', 'lectura_2', 'temp_2', 'textura'];
     $resultados = [];
 
     $rowFields = array_merge($campos, ['lote', 'numero_laboratorio']);
     for ($fila = 0, $total = lab_post_row_count($rowFields); $fila < $total; $fila++) {
         if (!lab_post_row_has_data($campos, $fila)) {
+            continue;
+        }
+
+        $numeroLaboratorio = lab_post_string('numero_laboratorio', $fila);
+        if (labSharedControlKeyFromNumero($numeroLaboratorio) !== null) {
             continue;
         }
 
@@ -45,7 +51,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             'porcentaje_arcilla' => $porcentajeArcilla,
             'porcentaje_limo' => $porcentajeLimo,
             'porcentaje_arena' => $porcentajeArena,
-            'textura' => '',
+            'textura' => lab_post_string('textura', $fila),
         ]);
     }
 

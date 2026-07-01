@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 lab_require_analysis_access('suelos.pmp');
 
 require_once __DIR__ . '/../../includes/analisis_post_helper.php';
+require_once __DIR__ . '/../../includes/shared_lot_controls_helper.php';
 require_once __DIR__ . '/../../models/conexion.php';
 require_once __DIR__ . '/../../models/Suelos/pmp_model.php';
 
@@ -12,11 +13,12 @@ $conn = $conexion->conectar();
 $resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $campos = ['peso_caja', 'peso_caja_mhumeda', 'peso_caja_mseca'];
+    $campos = ['peso_caja', 'peso_caja_mhumeda', 'peso_caja_mseca', 'no_caja', 'control'];
     $resultados = [];
     $psh = 0;
     $pss = 0;
     $porcentaje_pmp = 0;
+    $controlesPorLote = labSharedControlRowsByLote(['control']);
     $rowFields = array_merge($campos, ['lote', 'numero_laboratorio']);
 
     for ($fila = 0, $total = lab_post_row_count($rowFields); $fila < $total; $fila++) {
@@ -26,12 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $lote = lab_post_string('lote', $fila);
         $numeroLaboratorio = lab_post_string('numero_laboratorio', $fila);
+        if (labSharedControlKeyFromNumero($numeroLaboratorio) !== null) {
+            continue;
+        }
 
         $peso_caja = lab_post_float('peso_caja', $fila);
         $peso_caja_mhumeda = lab_post_float('peso_caja_mhumeda', $fila);
         $peso_caja_mseca = lab_post_float('peso_caja_mseca', $fila);
-        $no_caja = null;
-        $control = null;
+        $no_caja = lab_post_string('no_caja', $fila);
+        $control = (float) (($controlesPorLote[$lote]['control'] ?? 0));
 
         $psh = $peso_caja_mhumeda - $peso_caja;
         $pss = $peso_caja_mseca - $peso_caja;

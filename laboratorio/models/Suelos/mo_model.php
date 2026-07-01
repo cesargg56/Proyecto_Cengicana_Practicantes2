@@ -8,8 +8,8 @@ function guardarMo(array $data, array $metadata = []): array
 
     $stmt = $conn->prepare(
         "INSERT INTO MO_Porcentaje
-        (peso_muestra, sulfato_ferroso_consumido, porcentaje_carbono_organico, porcentaje_materia_organica, m1_dicromato, m2_dicromato, val_solucion_ferroso, normalidad_sulfato_ferroso, ml_util_sulfato_ferroso1N, dicromato_potasio, dicromato_consumido, blanco_sulfato_ferroso)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        (peso_muestra, sulfato_ferroso_consumido, porcentaje_carbono_organico, porcentaje_materia_organica, m1_dicromato, m2_dicromato, val_solucion_ferroso, normalidad_sulfato_ferroso, ml_util_sulfato_ferroso1N, dicromato_potasio, dicromato_consumido, blanco_sulfato_ferroso, blanco_sulfato_ferroso_2)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
     $ok = $stmt->execute([
@@ -25,6 +25,7 @@ function guardarMo(array $data, array $metadata = []): array
         $data['dicromato_potasio'] ?? 0,
         $data['dicromato_consumido'] ?? 0,
         $data['blanco_sulfato_ferroso'] ?? 0,
+        $data['blanco_sulfato_ferroso_2'] ?? 0,
     ]);
     $id = $ok ? (int) $conn->lastInsertId() : false;
 

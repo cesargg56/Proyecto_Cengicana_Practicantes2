@@ -52,6 +52,14 @@ $resultado = $resultado ?? [];
                         <input type="number" step="any" name="peso_caja" id="peso_caja" required>
                     </div>
                     <div class="field">
+                        <label for="no_caja">Número de caja</label>
+                        <input type="text" name="no_caja" id="no_caja" required>
+                    </div>
+                    <div class="field">
+                        <label for="control">Control</label>
+                        <input type="number" step="any" name="control" id="control" required>
+                    </div>
+                    <div class="field">
                         <label for="peso_caja_mhumeda">Peso de caja + Muestra Húmeda</label>
                         <input type="number" step="any" name="peso_caja_mhumeda" id="peso_caja_mhumeda" required>
                     </div>

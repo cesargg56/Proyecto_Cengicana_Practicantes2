@@ -39,6 +39,8 @@ $resultado = $resultado ?? [];
                 <div class="section-title">Datos de analisis</div>
                 <div class="field-group">
                     <div class="field">
+                        <label>Blanco<input type="number" step="any" name="blanco"></label>
+                        <label>Control<input type="number" step="any" name="control"></label>
                         <label>Peso caja<input type="number" step="any" name="peso_caja"></label>
                         <label>Peso muestra seca<input type="number" step="any" name="peso_muestra_seca"></label>
                         <label>Volumen final<input type="number" step="any" name="volumen_final"></label>

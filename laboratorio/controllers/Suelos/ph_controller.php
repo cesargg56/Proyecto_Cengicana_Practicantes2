@@ -3,18 +3,22 @@ require_once __DIR__ . '/../../includes/auth.php';
 lab_require_analysis_access('suelos.ph');
 
 require_once __DIR__ . '/../../includes/analisis_post_helper.php';
+require_once __DIR__ . '/../../includes/shared_lot_controls_helper.php';
 require_once __DIR__ . '/../../models/Suelos/ph_model.php';
 
 $resultado = lab_analysis_take_flash();
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    $campos = ['ph', 'temperatura'];
+    $campos = ['blanco', 'control', 'ph', 'temperatura'];
     $resultados = [];
 
-    $rowFields = array_merge($campos, ['lote', 'numero_laboratorio']);
+    for ($fila = 0, $total = lab_post_row_count(array_merge($campos, ['lote', 'numero_laboratorio'])); $fila < $total; $fila++) {
+        if (!lab_post_row_has_data(array_merge($campos, ['lote', 'numero_laboratorio']), $fila)) {
+            continue;
+        }
 
-    for ($fila = 0, $total = lab_post_row_count($rowFields); $fila < $total; $fila++) {
-        if (!lab_post_row_has_data($campos, $fila)) {
+        $numeroLaboratorio = lab_post_string('numero_laboratorio', $fila);
+        if (labSharedControlKeyFromNumero($numeroLaboratorio) !== null) {
             continue;
         }
 
