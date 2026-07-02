@@ -48,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigoLote = trim($_POST['lote'] ?? '');
     $fechaMuestreo = $_POST['fecha_de_muestreo'] ?? null;
     $numeroMuestras = max(1, (int) ($_POST['numero_muestras'] ?? 1));
-    $fechaEstimada = $_POST['fecha_estimada'] ?? null;
     $observaciones = trim($_POST['observaciones'] ?? '');
     $ingresadoPor = trim($_POST['ingresado_por'] ?? '');
     $correoIngresado = trim($_POST['correo_ingresado_por'] ?? '');
@@ -72,36 +71,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $idLote = obtenerLote($conexion, $codigoLote);
-    $paramsSolicitud = [
-      $tipoMuestra['id_tipo'],
-      $idLote,
-      $codigoMuestreo,
-      $fechaMuestreo,
-      $numeroMuestras,
-      $ingresadoPor,
-      $correoIngresado,
-      $recibidoPor,
-      $correoRecibido,
-      date('Y-m-d'),
-      $fechaEstimada ?: null,
-      $observaciones,
-      $firmaIngreso,
-      $firmaRecibe,
-    ];
+    $fechaIngresoActual = date('Y-m-d');
+    $solicitudExistente = null;
 
     if ($idSolicitud) {
-      $updateSolicitud = $conexion->prepare("
-        UPDATE solicitud
-        SET id_tipo = ?, id_lote = ?, codigo_muestreo = ?, fecha_muestreo = ?, numero_muestras = ?,
-            ingresado_por = ?, correo_ingresado = ?, recibido_por = ?, correo_recibido = ?,
-            fecha_ingreso = ?, fecha_estimada = ?, observaciones = ?,
-            firma_ingreso = COALESCE(NULLIF(?, ''), firma_ingreso),
-            firma_recibe = COALESCE(NULLIF(?, ''), firma_recibe)
+      $stmtSolicitudExistente = $conexion->prepare("
+        SELECT id_solicitud, id_tipo, fecha_ingreso, fecha_estimada
+        FROM solicitud
         WHERE id_solicitud = ?
+        LIMIT 1
       ");
-      $paramsActualizar = array_merge($paramsSolicitud, [$idSolicitud]);
+      $stmtSolicitudExistente->execute([$idSolicitud]);
+      $solicitudExistente = $stmtSolicitudExistente->fetch(PDO::FETCH_ASSOC) ?: null;
+
+      if (!$solicitudExistente) {
+        throw new RuntimeException('La solicitud que intenta editar no existe.');
+      }
+    }
+
+    $fechaEstimadaNueva = calcularFechaEstimadaSolicitud($fechaIngresoActual, $tipoMuestra);
+    $tipoMuestraCambia = $solicitudExistente
+      && (int) ($solicitudExistente['id_tipo'] ?? 0) !== (int) $tipoMuestra['id_tipo'];
+
+    if ($idSolicitud) {
+      if ($tipoMuestraCambia) {
+        $fechaIngresoOriginal = trim((string) ($solicitudExistente['fecha_ingreso'] ?? ''));
+        if ($fechaIngresoOriginal === '') {
+          $fechaIngresoOriginal = $fechaIngresoActual;
+        }
+
+        $fechaEstimadaPersistida = calcularFechaEstimadaSolicitud($fechaIngresoOriginal, $tipoMuestra);
+
+        $updateSolicitud = $conexion->prepare("
+          UPDATE solicitud
+          SET id_tipo = ?, id_lote = ?, codigo_muestreo = ?, fecha_muestreo = ?, numero_muestras = ?,
+              ingresado_por = ?, correo_ingresado = ?, recibido_por = ?, correo_recibido = ?,
+              fecha_estimada = ?, observaciones = ?,
+              firma_ingreso = COALESCE(NULLIF(?, ''), firma_ingreso),
+              firma_recibe = COALESCE(NULLIF(?, ''), firma_recibe)
+          WHERE id_solicitud = ?
+        ");
+        $paramsActualizar = [
+          $tipoMuestra['id_tipo'],
+          $idLote,
+          $codigoMuestreo,
+          $fechaMuestreo,
+          $numeroMuestras,
+          $ingresadoPor,
+          $correoIngresado,
+          $recibidoPor,
+          $correoRecibido,
+          $fechaEstimadaPersistida,
+          $observaciones,
+          $firmaIngreso,
+          $firmaRecibe,
+          $idSolicitud,
+        ];
+      } else {
+        $updateSolicitud = $conexion->prepare("
+          UPDATE solicitud
+          SET id_tipo = ?, id_lote = ?, codigo_muestreo = ?, fecha_muestreo = ?, numero_muestras = ?,
+              ingresado_por = ?, correo_ingresado = ?, recibido_por = ?, correo_recibido = ?,
+              observaciones = ?,
+              firma_ingreso = COALESCE(NULLIF(?, ''), firma_ingreso),
+              firma_recibe = COALESCE(NULLIF(?, ''), firma_recibe)
+          WHERE id_solicitud = ?
+        ");
+        $paramsActualizar = [
+          $tipoMuestra['id_tipo'],
+          $idLote,
+          $codigoMuestreo,
+          $fechaMuestreo,
+          $numeroMuestras,
+          $ingresadoPor,
+          $correoIngresado,
+          $recibidoPor,
+          $correoRecibido,
+          $observaciones,
+          $firmaIngreso,
+          $firmaRecibe,
+          $idSolicitud,
+        ];
+      }
       $updateSolicitud->execute($paramsActualizar);
     } else {
+      $paramsSolicitud = [
+        $tipoMuestra['id_tipo'],
+        $idLote,
+        $codigoMuestreo,
+        $fechaMuestreo,
+        $numeroMuestras,
+        $ingresadoPor,
+        $correoIngresado,
+        $recibidoPor,
+        $correoRecibido,
+        $fechaIngresoActual,
+        $fechaEstimadaNueva,
+        $observaciones,
+        $firmaIngreso,
+        $firmaRecibe,
+      ];
+
       $insertSolicitud = $conexion->prepare("
         INSERT INTO solicitud (
           id_tipo, id_lote, codigo_muestreo, fecha_muestreo, numero_muestras,
