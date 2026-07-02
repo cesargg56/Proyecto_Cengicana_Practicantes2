@@ -255,6 +255,8 @@ try {
       s.id_solicitud,
       s.codigo_muestreo,
       s.fecha_muestreo,
+      s.fecha_ingreso,
+      s.fecha_estimada,
       s.numero_muestras,
       l.codigo_lote,
       tm.nombre AS tipo_nombre,
@@ -406,7 +408,6 @@ try {
             placeholder="Ej. 185"
             value="<?= htmlspecialchars($loteSeleccionado, ENT_QUOTES, 'UTF-8') ?>"/>
     </div>
-
     <div class="field">
         <label for="fecha_muestreo">
             Fecha de muestreo
@@ -416,6 +417,32 @@ try {
             id="fecha_muestreo"
             name="fecha_de_muestreo"
             type="date"/>
+    </div>
+    <div class="field">
+        <label for="fecha_ingreso">
+            Fecha de ingreso
+        </label>
+
+        <input
+            id="fecha_ingreso"
+            type="text"
+            placeholder="DD/MM/AAAA"
+            readonly
+            aria-readonly="true"
+            autocomplete="off"/>
+    </div>
+    <div class="field">
+        <label for="fecha_estimada">
+            Fecha estimada
+        </label>
+
+        <input
+            id="fecha_estimada"
+            type="text"
+            placeholder="DD/MM/AAAA"
+            readonly
+            aria-readonly="true"
+            autocomplete="off"/>
     </div>
 
     <div class="field">
@@ -429,7 +456,6 @@ try {
             type="number"
             placeholder="Ej. 7"/>
     </div>
-
     <div class="field">
         <label for="n_laboratorio_inicio">
             Número de laboratorio
