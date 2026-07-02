@@ -1081,3 +1081,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $labFooterContexto && empty
   <button type="submit" class="btn-submit">Guardar formularios en base de datos</button>
 </div>
 <script src="../../js/analisis_tabla.js?v=<?= (int) @filemtime(__DIR__ . '/../js/analisis_tabla.js') ?>" defer></script>
+
+
+
+}

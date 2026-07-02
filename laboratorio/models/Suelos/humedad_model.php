@@ -1,19 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../legacy_analysis_model_helper.php';
 
 function guardarHumedadSuelo(array $data, array $metadata = []): array
 {
     $conn = (new Conexion())->conectar();
-
-    $stmt = $conn->prepare(
-        "INSERT INTO suelo_humedad
-        (humedad)
-        VALUES (?)"
-    );
-
-    $ok = $stmt->execute([$data['humedad'] ?? 0]);
-    $id = $ok ? (int) $conn->lastInsertId() : false;
+    $id = labLegacyInsertAnalysisRow($conn, 'suelo_humedad', [
+        'humedad' => $data['humedad'] ?? 0,
+    ], $metadata);
 
     if ($id !== false) {
         return ['exito' => true, 'mensaje' => 'Humedad guardada correctamente.', 'id' => $id];

@@ -1,21 +1,20 @@
 <?php
 
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../legacy_analysis_model_helper.php';
 $conexion = new Conexion();
 $conn = $conexion->conectar();
 
 function guardarFosforo($abs_blanco, $absorbancia, $ppm_sol, $ppm_p, $control, array $metadata = [])
 {
     global $conn;
-
-    $stmt = $conn->prepare(
-        "INSERT INTO suelo_fosforo
-        (blanco, absorbancia, ppm_solucion, ppm_suelo, control)
-        VALUES (?, ?, ?, ?, ?)"
-    );
-
-    $ok = $stmt->execute([$abs_blanco, $absorbancia, $ppm_sol, $ppm_p, $control]);
-    $id = $ok ? (int) $conn->lastInsertId() : false;
+    $id = labLegacyInsertAnalysisRow($conn, 'suelo_fosforo', [
+        'blanco' => $abs_blanco,
+        'absorbancia' => $absorbancia,
+        'ppm_solucion' => $ppm_sol,
+        'ppm_suelo' => $ppm_p,
+        'control' => $control,
+    ], $metadata);
 
     if ($id !== false) {
         return [

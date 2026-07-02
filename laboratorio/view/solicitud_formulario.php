@@ -225,7 +225,7 @@ try {
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 </head>
 <body>
-   <link rel="stylesheet" href="../css/solicitud_formulario.css?v=4">
+   <link rel="stylesheet" href="../css/solicitud_formulario.css?v=5">
 
 <!-- NAV -->
 <nav>
