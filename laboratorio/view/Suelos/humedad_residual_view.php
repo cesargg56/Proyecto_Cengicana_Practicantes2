@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/auth.php';
 lab_require_analysis_access('suelos.humedad_residual');
 
-$doc_elemento = 'Humedad gravimetrica';
+$doc_elemento = 'Humedad Residual';
 $doc_tipo = 'Suelos';
 $doc_codigo = 'LAB-FS-042';
 $doc_fecha_doc = '2024-03-01';
@@ -18,13 +18,13 @@ $resultado = $resultado ?? [];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Humedad gravimetrica</title>
+    <title>Humedad Residual</title>
     <link rel="stylesheet" href="../../styles/formularios.css">
 </head>
 <body>
 <div class="page-wrap">
     <a class="back-link" href="../../view/labc_index.php">Volver</a>
-    <h2>Humedad gravimetrica</h2>
+    <h2>Humedad Residual</h2>
 
     <?php if (!empty($resultado)): ?>
         <div class="alerta <?= !empty($resultado['exito']) ? 'exito' : 'error' ?>">
@@ -39,7 +39,6 @@ $resultado = $resultado ?? [];
                 <div class="section-title">Datos de analisis</div>
                 <div class="field-group">
                     <div class="field">
-                        <label>Control<input type="number" step="any" name="control"></label>
                         <label>Peso caja<input type="number" step="any" name="PesoCaja"></label>
                         <label>Peso Muestra humeda<input type="number" step="any" name="PesoMuestraHumedo"></label>
                         <label>Peso caja + muestra seca<input type="number" step="any" name="PesoCajaMseca"></label>
@@ -50,5 +49,58 @@ $resultado = $resultado ?? [];
         </form>
     </div>
 </div>
+
+<template id="humedad-residual-control-row-template">
+    <tr class="lab-control-row" data-control-row="1">
+        <td>
+            <div class="lab-control-stack">
+                <strong>CONTROL</strong>
+                <input type="number" step="any" name="control" id="control" aria-label="Identificador del control" required>
+            </div>
+        </td>
+        <td>
+            <span>CONTROL</span>
+            <input type="hidden" name="control_lote" value="CONTROL">
+        </td>
+        <td>
+            <span>CONTROL</span>
+            <input type="hidden" name="control_numero_laboratorio" value="CONTROL">
+        </td>
+        <td>
+            <input type="number" step="any" name="control_PesoCaja" aria-label="Peso caja del control" required>
+        </td>
+        <td>
+            <input type="number" step="any" name="control_PesoMuestraHumedo" aria-label="Peso muestra húmeda del control" required>
+        </td>
+        <td>
+            <input type="number" step="any" name="control_PesoCajaMseca" aria-label="Peso caja + muestra seca del control" required>
+        </td>
+        <td></td>
+    </tr>
+</template>
+
+<script>
+(function () {
+    function insertControlRow() {
+        const template = document.getElementById('humedad-residual-control-row-template');
+        const table = document.querySelector('table.lab-entry-table');
+        const tbody = table ? table.querySelector('tbody') : null;
+
+        if (!template || !table || !tbody || tbody.querySelector('[data-control-row="1"]')) {
+            return;
+        }
+
+        const fragment = template.content.cloneNode(true);
+        const row = fragment.querySelector('tr');
+        if (!row) {
+            return;
+        }
+
+        tbody.insertBefore(row, tbody.firstChild);
+    }
+
+    window.addEventListener('load', insertControlRow);
+})();
+</script>
 </body>
 </html>
