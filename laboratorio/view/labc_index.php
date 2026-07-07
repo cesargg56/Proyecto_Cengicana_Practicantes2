@@ -41,6 +41,7 @@ function labc_card_icon(string $key): string
         'suelos.textura' => 'fa-mountain',
         'suelos.humedad' => 'fa-droplet',
         'suelos.humedad_residual' => 'fa-water',
+        'suelos.humedad_gravimetrica' => 'fa-water',
         'suelos.dap' => 'fa-layer-group',
         'suelos.cc' => 'fa-seedling',
         'suelos.pmp' => 'fa-leaf',
@@ -172,7 +173,7 @@ foreach ($suelosAnalyses as $analisis) {
     if (in_array($analisis['key'], [
         'suelos.textura',
         'suelos.humedad',
-        'suelos.humedad_residual',
+        'suelos.humedad_gravimetrica',
         'suelos.dap',
         'suelos.cc',
         'suelos.pmp'
@@ -186,7 +187,7 @@ foreach ($suelosAnalyses as $analisis) {
 $suelosFisicos = labc_visible_analysis([
     ['key' => 'suelos.textura', 'href' => '../controllers/Suelos/textura_controller.php', 'label' => 'Textura'],
     ['key' => 'suelos.humedad', 'href' => '../controllers/Suelos/humedad_residual_controller.php', 'label' => 'Humedad Residual'],
-    ['key' => 'suelos.humedad_residual', 'href' => '../controllers/Suelos/humedad_gravimetrica_controller.php', 'label' => 'Humedad gravimetrica'],
+    ['key' => 'suelos.humedad_gravimetrica', 'href' => '../controllers/Suelos/humedad_gravimetrica_controller.php', 'label' => 'Humedad gravimetrica'],
     ['key' => 'suelos.dap', 'href' => '../controllers/Suelos/dap_controller.php', 'label' => 'Densidad aparente (DAP)'],
     ['key' => 'suelos.cc', 'href' => '../controllers/Suelos/cc_controller.php', 'label' => 'Capacidad de Campo'],
     ['key' => 'suelos.pmp', 'href' => '../controllers/Suelos/pmp_controller.php', 'label' => 'Punto de Marchitez Permanente'],

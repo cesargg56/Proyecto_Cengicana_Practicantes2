@@ -1058,6 +1058,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $labFooterContexto && empty
       'muestras' => $labFooterMuestras,
       'muestrasUsadas' => $labFooterMuestrasUsadas,
       'loteActual' => $lote_actual,
+      'solicitudes' => $labCapturaLotes['solicitudes'] ?? [],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 
   <button type="submit" class="btn-submit">Guardar formularios en base de datos</button>

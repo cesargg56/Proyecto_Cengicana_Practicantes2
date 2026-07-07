@@ -41,6 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'mensaje' => 'Complete fecha y analista para guardar el registro.',
         ];
     } else {
+        labFormularioEnsureSchema();
+
         for ($fila = 0, $total = lab_post_row_count($campos); $fila < $total; $fila++) {
             if (!lab_post_row_has_data($campos, $fila)) {
                 continue;

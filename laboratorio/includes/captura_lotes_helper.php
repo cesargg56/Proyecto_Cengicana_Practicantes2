@@ -480,6 +480,7 @@ if (!function_exists('labObtenerLotesDisponiblesCaptura')) {
         $loteActual = trim((string) ($loteActual ?? ''));
         $contexto = $contexto ?? labCapturaContextoAnalisis();
         $muestrasUsadas = labCapturaMuestrasUsadasPorTablaActual();
+        $solicitudes = [];
 
         if (!$pdo || !$contexto) {
             return [
@@ -487,6 +488,7 @@ if (!function_exists('labObtenerLotesDisponiblesCaptura')) {
                 'muestras' => [],
                 'muestrasUsadas' => $muestrasUsadas,
                 'loteActual' => $loteActual,
+                'solicitudes' => [],
             ];
         }
 
@@ -605,6 +607,7 @@ if (!function_exists('labObtenerLotesDisponiblesCaptura')) {
                 'muestras' => [],
                 'muestrasUsadas' => $muestrasUsadas,
                 'loteActual' => $loteActual,
+                'solicitudes' => [],
             ];
         }
 
@@ -649,11 +652,170 @@ if (!function_exists('labObtenerLotesDisponiblesCaptura')) {
             $muestrasOrdenadas[$codigoLote] = $muestras[$codigoLote] ?? [];
         }
 
+        $solicitudesPorId = [];
+        try {
+            $paramsSolicitudes = $lotes;
+            $condicionesSolicitudes = labCapturaCondicionesContexto($contexto, $paramsSolicitudes);
+            $placeholdersSolicitudes = implode(', ', array_fill(0, count($lotes), '?'));
+
+            $stmt = $pdo->prepare("
+                SELECT DISTINCT
+                    s.id_solicitud,
+                    l.id_lote,
+                    l.codigo_lote,
+                    tm.nombre AS tipo_muestra
+                  FROM lote l
+                  INNER JOIN solicitud s ON s.id_lote = l.id_lote
+                  INNER JOIN tipo_muestra tm ON tm.id_tipo = s.id_tipo
+                  INNER JOIN solicitud_analisis sa ON sa.id_solicitud = s.id_solicitud
+                  INNER JOIN tipo_analisis ta ON ta.id_tipo = sa.id_tipo_analisis
+                 WHERE l.codigo_lote IN ({$placeholdersSolicitudes})
+                   AND l.codigo_lote IS NOT NULL
+                   AND l.codigo_lote <> ''
+                   AND {$condicionesSolicitudes['tipo']}
+                   AND {$condicionesSolicitudes['analisis']}
+                 ORDER BY l.codigo_lote ASC, s.id_solicitud DESC
+            ");
+            $stmt->execute($paramsSolicitudes);
+            $rowsSolicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            foreach ($rowsSolicitudes as $row) {
+                $idSolicitud = (int) ($row['id_solicitud'] ?? 0);
+                $idLote = (int) ($row['id_lote'] ?? 0);
+                $codigoLote = trim((string) ($row['codigo_lote'] ?? ''));
+                $tipoMuestra = trim((string) ($row['tipo_muestra'] ?? ''));
+
+                if ($idSolicitud <= 0 || $idLote <= 0 || $codigoLote === '' || isset($solicitudesPorId[$idSolicitud])) {
+                    continue;
+                }
+
+                $solicitudesPorId[$idSolicitud] = [
+                    'id_solicitud' => $idSolicitud,
+                    'id_lote' => $idLote,
+                    'codigo_lote' => $codigoLote,
+                    'tipo_muestra' => $tipoMuestra,
+                    'muestras' => [],
+                    'muestrasUsadas' => [],
+                ];
+            }
+
+            if ($solicitudesPorId) {
+                $tablaActual = labCapturaTablaActual();
+                $muestrasUsadasPorSolicitud = [];
+
+                if ($tablaActual) {
+                    $columnasTablaActual = labCapturaColumnasTabla($pdo, $tablaActual);
+                    if ($columnasTablaActual && in_array('id_solicitud', $columnasTablaActual, true)) {
+                        $exprNumero = null;
+                        $joinMuestra = '';
+
+                        if (in_array('no_lab', $columnasTablaActual, true)) {
+                            $exprNumero = 't.no_lab';
+                        } elseif (in_array('numero_laboratorio', $columnasTablaActual, true)) {
+                            if (in_array('id_solicitud', $columnasTablaActual, true)) {
+                                $joinMuestra = ' LEFT JOIN muestra m ON m.id_solicitud = t.id_solicitud AND m.numero_muestra = t.numero_laboratorio ';
+                                $exprNumero = "COALESCE(m.codigo_lab, CAST(t.numero_laboratorio AS CHAR))";
+                            } else {
+                                $exprNumero = 'CAST(t.numero_laboratorio AS CHAR)';
+                            }
+                        } elseif (in_array('numero_muestra', $columnasTablaActual, true)) {
+                            $exprNumero = 'CAST(t.numero_muestra AS CHAR)';
+                        }
+
+                        if ($exprNumero) {
+                            $stmt = $pdo->query("
+                                SELECT DISTINCT t.id_solicitud AS id_solicitud, {$exprNumero} AS numero_lab
+                                  FROM `{$tablaActual}` t
+                                  {$joinMuestra}
+                                 WHERE t.id_solicitud IS NOT NULL
+                                   AND t.id_solicitud > 0
+                                   AND {$exprNumero} IS NOT NULL
+                                   AND {$exprNumero} <> ''
+                            ");
+
+                            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                                $idSolicitud = (int) ($row['id_solicitud'] ?? 0);
+                                $numero = trim((string) ($row['numero_lab'] ?? ''));
+                                if ($idSolicitud <= 0 || $numero === '') {
+                                    continue;
+                                }
+
+                                $muestrasUsadasPorSolicitud[$idSolicitud] ??= [];
+                                if (!in_array($numero, $muestrasUsadasPorSolicitud[$idSolicitud], true)) {
+                                    $muestrasUsadasPorSolicitud[$idSolicitud][] = $numero;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $idsSolicitudes = array_keys($solicitudesPorId);
+                $placeholdersIds = implode(', ', array_fill(0, count($idsSolicitudes), '?'));
+                $stmt = $pdo->prepare("
+                    SELECT DISTINCT
+                        s.id_solicitud,
+                        l.id_lote,
+                        l.codigo_lote,
+                        tm.nombre AS tipo_muestra,
+                        m.codigo_lab,
+                        m.numero_muestra
+                      FROM lote l
+                      INNER JOIN solicitud s ON s.id_lote = l.id_lote
+                      INNER JOIN tipo_muestra tm ON tm.id_tipo = s.id_tipo
+                      INNER JOIN muestra m ON m.id_solicitud = s.id_solicitud
+                     WHERE s.id_solicitud IN ({$placeholdersIds})
+                       AND l.codigo_lote IS NOT NULL
+                       AND l.codigo_lote <> ''
+                       AND (m.codigo_lab IS NOT NULL OR m.numero_muestra IS NOT NULL)
+                     ORDER BY l.codigo_lote, s.id_solicitud, m.numero_muestra, m.codigo_lab
+                ");
+                $stmt->execute($idsSolicitudes);
+
+                foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                    $idSolicitud = (int) ($row['id_solicitud'] ?? 0);
+                    $codigoLote = trim((string) ($row['codigo_lote'] ?? ''));
+                    $numero = trim((string) ($row['codigo_lab'] ?? ''));
+                    if ($numero === '' && $row['numero_muestra'] !== null) {
+                        $numero = (string) $row['numero_muestra'];
+                    }
+
+                    if ($idSolicitud <= 0 || $codigoLote === '' || $numero === '' || !isset($solicitudesPorId[$idSolicitud])) {
+                        continue;
+                    }
+
+                    $solicitudesPorId[$idSolicitud]['muestras'] ??= [];
+                    if (!in_array($numero, $solicitudesPorId[$idSolicitud]['muestras'], true)) {
+                        $solicitudesPorId[$idSolicitud]['muestras'][] = $numero;
+                    }
+                }
+
+                foreach ($solicitudesPorId as $idSolicitud => &$solicitud) {
+                    $solicitud['muestras'] = array_values(array_unique($solicitud['muestras']));
+                    $solicitud['muestrasUsadas'] = $muestrasUsadasPorSolicitud[$idSolicitud] ?? ($muestrasUsadas[$solicitud['codigo_lote']] ?? []);
+                    if (is_array($solicitud['muestrasUsadas'])) {
+                        $solicitud['muestrasUsadas'] = array_values(array_unique(array_filter(array_map(static function ($valor): string {
+                            return trim((string) $valor);
+                        }, $solicitud['muestrasUsadas']), static function (string $valor): bool {
+                            return $valor !== '';
+                        })));
+                    } else {
+                        $solicitud['muestrasUsadas'] = [];
+                    }
+                }
+                unset($solicitud);
+
+                $solicitudes = array_values($solicitudesPorId);
+            }
+        } catch (Throwable $e) {
+            $solicitudes = [];
+        }
+
         return [
             'lotes' => $lotes,
             'muestras' => $muestrasOrdenadas,
             'muestrasUsadas' => $muestrasUsadas,
             'loteActual' => $loteActual,
+            'solicitudes' => $solicitudes,
         ];
     }
 }
