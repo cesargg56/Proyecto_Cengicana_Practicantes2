@@ -39,8 +39,6 @@ $resultado = $resultado ?? [];
                 <div class="section-title">Datos de analisis</div>
                 <div class="field-group">
                     <div class="field">
-                        <label>Blanco<input type="number" step="any" name="blanco"></label>
-                        <label>Control<input type="number" step="any" name="control"></label>
                         <label>pH<input type="number" step="any" name="ph"></label>
                         <label>Temperatura<input type="number" step="any" name="temperatura"></label>
                     </div>
@@ -50,5 +48,69 @@ $resultado = $resultado ?? [];
         </form>
     </div>
 </div>
+
+<template id="ph-control-rows-template">
+    <tr class="lab-data-row lab-control-row" data-control-row="agua_control">
+        <td class="lab-row-index"></td>
+        <td>
+            <strong>AGUA</strong>
+        </td>
+        <td>
+            <strong>AGUA</strong>
+        </td>
+        <td>
+            <input type="number" step="any" name="agua_control_ph">
+        </td>
+        <td>
+            <input type="number" step="any" name="agua_control_temperatura">
+        </td>
+        <td></td>
+    </tr>
+    <tr class="lab-data-row lab-control-row" data-control-row="control">
+        <td class="lab-row-index"></td>
+        <td>
+            <strong>CONTROL</strong>
+        </td>
+        <td>
+            <strong>CONTROL</strong>
+        </td>
+        <td>
+            <input type="number" step="any" name="control_ph">
+        </td>
+        <td>
+            <input type="number" step="any" name="control_temperatura">
+        </td>
+        <td></td>
+    </tr>
+</template>
+
+<script>
+(function () {
+    function renumberRows(tbody) {
+        Array.from(tbody.querySelectorAll('tr.lab-data-row')).forEach((row, index) => {
+            const indexCell = row.querySelector('.lab-row-index');
+            if (indexCell) {
+                indexCell.textContent = String(index + 1);
+            }
+        });
+    }
+
+    function insertControlRows() {
+        const template = document.getElementById('ph-control-rows-template');
+        const table = document.querySelector('table.lab-entry-table');
+        const tbody = table ? table.querySelector('tbody') : null;
+
+        if (!template || !table || !tbody || tbody.querySelector('[data-control-row="agua_control"]')) {
+            return;
+        }
+
+        const fragment = template.content.cloneNode(true);
+        tbody.insertBefore(fragment, tbody.firstChild);
+        renumberRows(tbody);
+    }
+
+    window.addEventListener('load', insertControlRows);
+})();
+</script>
 </body>
 </html>

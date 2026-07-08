@@ -10,16 +10,43 @@ require_once __DIR__ . '/../../models/conexion.php';
 $conexion = new Conexion();
 $conn = $conexion->conectar();
 
+$labAnalysisContexto = [
+    'tipos' => ['suelos', 'suelo'],
+    'analisis' => ['Boro'],
+    'label' => 'Boro de Suelos',
+];
+$labAnalysisLegacyConfig = $labAnalysisContexto;
+$GLOBALS['labAnalysisContexto'] = $labAnalysisContexto;
+$GLOBALS['labAnalysisLegacyConfig'] = $labAnalysisLegacyConfig;
+
 $resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $campos = ['abs_blanco', 'absorbancia', 'control'];
+    $campos = ['abs_blanco', 'absorbancia'];
     $resultados = [];
     $ppm_b = 0;
     $controlesPorLote = labSharedControlRowsByLote(['abs_blanco', 'control']);
+    $controlLote = lab_post_string('control_lote');
+    $controlNumeroLaboratorio = lab_post_string('control_numero_laboratorio');
+    $controlAbsBlanco = lab_post_float('control_abs_blanco');
+    $controlAbsorbancia = lab_post_float('control_absorbancia');
+
+    if ($controlLote !== '' || $controlNumeroLaboratorio !== '') {
+        $ppm_b = (($controlAbsorbancia - $controlAbsBlanco) * 40 * (100 + 1.408)) / (20 * 100);
+        if ($ppm_b < 0) {
+            $ppm_b = 0;
+        }
+
+        $resultados[] = guardarBoro($controlAbsBlanco, $controlAbsorbancia, $ppm_b, 0);
+    }
+
     $rowFields = array_merge($campos, ['lote', 'numero_laboratorio']);
 
     for ($fila = 0, $total = lab_post_row_count($rowFields); $fila < $total; $fila++) {
+        if (!lab_post_row_has_data($campos, $fila)) {
+            continue;
+        }
+
         $lote = lab_post_string('lote', $fila);
         $numeroLaboratorio = lab_post_string('numero_laboratorio', $fila);
         if (labSharedControlKeyFromNumero($numeroLaboratorio) !== null) {
@@ -55,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $resultado = lab_resultado_multiple($resultados, 'boro');
-    $resultado['ppm_b'] = $ppm_b;
 }
 
 lab_analysis_redirect_after_success($resultado);

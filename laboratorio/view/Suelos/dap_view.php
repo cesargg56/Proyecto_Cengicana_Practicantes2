@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/auth.php';
 lab_require_analysis_access('suelos.dap');
 
-$doc_elemento = 'DAP';
+$doc_elemento = 'Densidad Aparente (DAP)';
 $doc_tipo = 'Suelos';
 $doc_codigo = 'LAB-FS-042';
 $doc_fecha_doc = '2024-03-01';
@@ -18,13 +18,13 @@ $resultado = $resultado ?? [];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAP</title>
+    <title>Densidad Aparente (DAP)</title>
     <link rel="stylesheet" href="../../styles/formularios.css">
 </head>
 <body>
 <div class="page-wrap">
     <a class="back-link" href="../../view/labc_index.php">Volver</a>
-    <h2>DAP</h2>
+    <h2>Densidad Aparente (DAP)</h2>
 
     <?php if (!empty($resultado)): ?>
         <div class="alerta <?= !empty($resultado['exito']) ? 'exito' : 'error' ?>">

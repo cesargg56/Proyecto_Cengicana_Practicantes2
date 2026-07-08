@@ -55,7 +55,7 @@ $resultado = $resultado ?? [];
         <td>
             <div class="lab-control-stack">
                 <strong>CONTROL</strong>
-                <input type="number" step="any" name="control" id="control" aria-label="Identificador del control" required>
+                <input type="hidden"  name="control"  value="CONTROL">
             </div>
         </td>
         <td>
