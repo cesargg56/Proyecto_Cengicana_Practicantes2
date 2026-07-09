@@ -38,6 +38,7 @@ $stmt = $conexion->query("
            AND f.id_tipo_analisis = ta.id_tipo
          WHERE lr2.id_lote = l.id_lote
     )
+      AND ta.id_tipo_muestra = s.id_tipo
     GROUP BY
         l.id_lote,
         l.codigo_lote,
