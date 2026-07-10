@@ -153,9 +153,15 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['foliares', 'foliar'],
             'analisis' => ['Macros', 'Macronutrientes'],
             'fields' => [
+                ['name' => 'peso', 'label' => 'Peso (g)'],
                 ['name' => 'calcio', 'label' => 'Calcio'],
                 ['name' => 'magnesio', 'label' => 'Magnesio'],
                 ['name' => 'potasio', 'label' => 'Potasio'],
+                ['name' => 'sodio', 'label' => 'Sodio'],
+                ['name' => 'blk_calcio', 'label' => 'BLK Calcio'],
+                ['name' => 'blk_magnesio', 'label' => 'BLK Magnesio'],
+                ['name' => 'blk_potasio', 'label' => 'BLK Potasio'],
+                ['name' => 'blk_sodio', 'label' => 'BLK Sodio'],
             ],
         ],
         'foliares-nitrogeno' => [

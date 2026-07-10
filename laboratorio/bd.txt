@@ -601,3 +601,38 @@ CREATE TABLE mieles_brix (
 
 ```
 ```
+-- =====================================================
+-- MODIFICACION DE LA TABLA FOLIARES_MACROS
+-- =====================================================
+
+ALTER TABLE laboratorios_prueba.foliar_macros
+
+ADD COLUMN peso DECIMAL(10,4) NULL
+AFTER id_formulario,
+
+ADD COLUMN sodio DECIMAL(10,4) NULL
+AFTER potasio,
+
+ADD COLUMN blk_calcio DECIMAL(10,4) NULL
+AFTER sodio,
+
+ADD COLUMN blk_magnesio DECIMAL(10,4) NULL
+AFTER blk_calcio,
+
+ADD COLUMN blk_potasio DECIMAL(10,4) NULL
+AFTER blk_magnesio,
+
+ADD COLUMN blk_sodio DECIMAL(10,4) NULL
+AFTER blk_potasio,
+
+ADD COLUMN porcentaje_calcio DECIMAL(10,4) NULL
+AFTER blk_sodio,
+
+ADD COLUMN porcentaje_magnesio DECIMAL(10,4) NULL
+AFTER porcentaje_calcio,
+
+ADD COLUMN porcentaje_potasio DECIMAL(10,4) NULL
+AFTER porcentaje_magnesio,
+
+ADD COLUMN porcentaje_sodio DECIMAL(10,4) NULL
+AFTER porcentaje_potasio;
