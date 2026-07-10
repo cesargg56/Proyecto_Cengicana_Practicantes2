@@ -172,9 +172,9 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['foliares', 'foliar'],
             'analisis' => ['Nitrogeno', 'Nitrogeno'],
             'fields' => [
-                ['name' => 'ml_gastado', 'label' => 'ml gastado'],
-                ['name' => 'normalidad', 'label' => 'Normalidad'],
-                ['name' => 'resultado', 'label' => 'Resultado'],
+                ['name' => 'peso', 'label' => 'Peso'],
+                ['name' => 'ml_hcl_blk', 'label' => 'Ml HCl BLK'],
+                ['name' => 'ml_hcl_muestra', 'label' => 'Ml HCl Muestra'],
             ],
         ],
         'foliares-boro' => [

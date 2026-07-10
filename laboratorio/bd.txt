@@ -636,3 +636,36 @@ AFTER porcentaje_magnesio,
 
 ADD COLUMN porcentaje_sodio DECIMAL(10,4) NULL
 AFTER porcentaje_potasio;
+
+
+
+-- =====================================================
+-- MODIFICACION DE LA TABLA FOLIAR_NITROGENO
+-- =====================================================
+
+
+
+ALTER TABLE laboratorios_prueba.foliar_nitrogeno
+
+ADD COLUMN peso DECIMAL(10,4) NULL
+AFTER id_formulario,
+
+ADD COLUMN ml_hcl_blanco DECIMAL(10,4) NULL
+AFTER peso,
+
+ADD COLUMN ml_hcl_muestra DECIMAL(10,4) NULL
+AFTER ml_hcl_blanco,
+
+ADD COLUMN porcentaje_nitrogeno DECIMAL(10,4) NULL
+AFTER ml_hcl_muestra;
+
+
+
+
+ALTER TABLE laboratorios_prueba.foliar_nitrogeno
+DROP COLUMN ml_gastado,
+DROP COLUMN normalidad,
+DROP COLUMN resultado;
+
+
+DESCRIBE laboratorios_prueba.foliar_nitrogeno;
