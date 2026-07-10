@@ -5,7 +5,7 @@ require_once __DIR__ . '/../legacy_analysis_model_helper.php';
 $conexion = new Conexion();
 $conn = $conexion->conectar();
 
-function guardarBoroFoliar($peso_muestra, $abs_blanco, $absorbancia, $resultado, array $metadata = [])
+function guardarBoroFoliar($peso_muestra, $abs_blanco, $absorbancia, $ppm_b_solucion, $ppm_b_muestra, array $metadata = [])
 {
     global $conn;
 
@@ -13,7 +13,8 @@ function guardarBoroFoliar($peso_muestra, $abs_blanco, $absorbancia, $resultado,
         'peso_muestra' => $peso_muestra,
         'abs_blanco' => $abs_blanco,
         'absorbancia' => $absorbancia,
-        'resultado' => $resultado,
+        'ppm_b_solucion' => $ppm_b_solucion,
+        'ppm_b_muestra' => $ppm_b_muestra,
     ], $metadata);
 
     if ($id !== false) {
