@@ -185,8 +185,9 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['foliares', 'foliar'],
             'analisis' => ['Boro'],
             'fields' => [
+                ['name' => 'peso_muestra', 'label' => 'Peso Muestra'],
+                ['name' => 'abs_blanco', 'label' => 'Abs. Blanco'],
                 ['name' => 'absorbancia', 'label' => 'Absorbancia'],
-                ['name' => 'resultado', 'label' => 'Resultado'],
             ],
         ],
         'cana-peso-seco' => [
