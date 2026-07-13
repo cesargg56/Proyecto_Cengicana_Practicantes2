@@ -6,6 +6,16 @@ require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../models/conexion.php';
 require_once __DIR__ . '/../../models/Foliares/micros_model.php';
 
+$labAnalysisContexto = [
+    'tipos' => ['foliares', 'foliar'],
+    'analisis' => ['Micro Nutrientes (Cu, Zn, Fe, Mn, K)'],
+    'label' => 'Micro Nutrientes Foliares',
+];
+$labAnalysisLegacyConfig = $labAnalysisContexto;
+$GLOBALS['labAnalysisContexto'] = $labAnalysisContexto;
+$GLOBALS['labAnalysisLegacyConfig'] = $labAnalysisLegacyConfig;
+$GLOBALS['labSkipFooterBaseSave'] = true;
+
 $resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
