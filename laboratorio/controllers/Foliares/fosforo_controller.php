@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ppm_p_sol = 0;
         }
 
-        $porcentaje_p = $peso != 0 ? ($ppm_p_sol / $peso) : 0;
+        $porcentaje_p = $peso != 0 ? (($ppm_p_sol * 0.005) / $peso) : 0;
         if ($porcentaje_p < 0) {
             $porcentaje_p = 0;
         }
