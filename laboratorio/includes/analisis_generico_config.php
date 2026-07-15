@@ -153,9 +153,15 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['foliares', 'foliar'],
             'analisis' => ['Macros', 'Macronutrientes'],
             'fields' => [
+                ['name' => 'peso', 'label' => 'Peso (g)'],
                 ['name' => 'calcio', 'label' => 'Calcio'],
                 ['name' => 'magnesio', 'label' => 'Magnesio'],
                 ['name' => 'potasio', 'label' => 'Potasio'],
+                ['name' => 'sodio', 'label' => 'Sodio'],
+                ['name' => 'blk_calcio', 'label' => 'BLK Calcio'],
+                ['name' => 'blk_magnesio', 'label' => 'BLK Magnesio'],
+                ['name' => 'blk_potasio', 'label' => 'BLK Potasio'],
+                ['name' => 'blk_sodio', 'label' => 'BLK Sodio'],
             ],
         ],
         'foliares-nitrogeno' => [
@@ -166,9 +172,9 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['foliares', 'foliar'],
             'analisis' => ['Nitrogeno', 'Nitrogeno'],
             'fields' => [
-                ['name' => 'ml_gastado', 'label' => 'ml gastado'],
-                ['name' => 'normalidad', 'label' => 'Normalidad'],
-                ['name' => 'resultado', 'label' => 'Resultado'],
+                ['name' => 'peso', 'label' => 'Peso'],
+                ['name' => 'ml_hcl_blk', 'label' => 'Ml HCl BLK'],
+                ['name' => 'ml_hcl_muestra', 'label' => 'Ml HCl Muestra'],
             ],
         ],
         'foliares-boro' => [
@@ -179,8 +185,9 @@ function lab_generic_analysis_configs(): array
             'tipos' => ['foliares', 'foliar'],
             'analisis' => ['Boro'],
             'fields' => [
+                ['name' => 'peso_muestra', 'label' => 'Peso Muestra'],
+                ['name' => 'abs_blanco', 'label' => 'Abs. Blanco'],
                 ['name' => 'absorbancia', 'label' => 'Absorbancia'],
-                ['name' => 'resultado', 'label' => 'Resultado'],
             ],
         ],
         'cana-peso-seco' => [
@@ -226,7 +233,7 @@ function lab_generic_analysis_configs(): array
                 ['name' => 'ingenio', 'label' => 'Ingenio', 'type' => 'text'],
                 ['name' => 'dia_zafra', 'label' => 'Dia zafra', 'type' => 'text'],
                 ['name' => 'brix_obs', 'label' => 'Brix obs.'],
-                ['name' => 'brix_corr', 'label' => 'Brix corr.'],
+                ['name' => 'brix_corr', 'label' => 'Brix corr.', 'computed' => true],
             ],
         ],
     ];

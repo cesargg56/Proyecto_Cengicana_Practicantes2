@@ -1,22 +1,15 @@
 <?php
 
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../legacy_analysis_model_helper.php';
 
 function guardarPhSuelo(array $data, array $metadata = []): array
 {
     $conn = (new Conexion())->conectar();
-
-    $stmt = $conn->prepare(
-        "INSERT INTO suelo_ph
-        (ph, temperatura)
-        VALUES (?, ?)"
-    );
-
-    $ok = $stmt->execute([
-        $data['ph'] ?? 0,
-        $data['temperatura'] ?? 0,
-    ]);
-    $id = $ok ? (int) $conn->lastInsertId() : false;
+    $id = labLegacyInsertAnalysisRow($conn, 'suelo_ph', [
+        'ph' => $data['ph'] ?? 0,
+        'temperatura' => $data['temperatura'] ?? 0,
+    ], $metadata);
 
     if ($id !== false) {
         return ['exito' => true, 'mensaje' => 'pH guardado correctamente.', 'id' => $id];

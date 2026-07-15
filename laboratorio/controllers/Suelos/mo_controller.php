@@ -6,6 +6,14 @@ require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../includes/shared_lot_controls_helper.php';
 require_once __DIR__ . '/../../models/Suelos/mo_model.php';
 
+$labSkipFooterBaseSave = true;
+$labAnalysisContexto = [
+    'tipos' => ['suelos', 'suelo'],
+    'analisis' => ['%MO'],
+    'label' => 'Materia Organica en Suelos',
+];
+$GLOBALS['labAnalysisContexto'] = $labAnalysisContexto;
+
 $resultado = lab_analysis_take_flash();
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {

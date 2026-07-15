@@ -13,11 +13,26 @@ $conn = $conexion->conectar();
 $resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $campos = ['abs_blanco', 'absorbancia', 'control'];
+    $campos = ['abs_blanco', 'absorbancia'];
     $resultados = [];
     $ppm_sol = 0;
     $ppm_p = 0;
     $controlesPorLote = labSharedControlRowsByLote(['abs_blanco', 'control']);
+    $controlLote = lab_post_string('control_lote');
+    $controlNumeroLaboratorio = lab_post_string('control_numero_laboratorio');
+    $controlAbsBlanco = lab_post_float('control_abs_blanco');
+    $controlAbsorbancia = lab_post_float('control_absorbancia');
+
+    if ($controlLote !== '' || $controlNumeroLaboratorio !== '') {
+        $ppm_sol = (($controlAbsorbancia - $controlAbsBlanco) / 0.0481);
+        if ($ppm_sol < 0) {
+            $ppm_sol = 0;
+        }
+
+        $ppm_p = $ppm_sol * 5;
+        $resultados[] = guardarFosforo($controlAbsBlanco, $controlAbsorbancia, $ppm_sol, $ppm_p, 0);
+    }
+
     $rowFields = array_merge($campos, ['lote', 'numero_laboratorio']);
 
     for ($fila = 0, $total = lab_post_row_count($rowFields); $fila < $total; $fila++) {

@@ -41,6 +41,7 @@ function labc_card_icon(string $key): string
         'suelos.textura' => 'fa-mountain',
         'suelos.humedad' => 'fa-droplet',
         'suelos.humedad_residual' => 'fa-water',
+        'suelos.humedad_gravimetrica' => 'fa-water',
         'suelos.dap' => 'fa-layer-group',
         'suelos.cc' => 'fa-seedling',
         'suelos.pmp' => 'fa-leaf',
@@ -78,6 +79,7 @@ function labc_card_icon(string $key): string
         'cana.humedad' => 'fa-droplet',
         'cana.brixpol' => 'fa-chart-line',
         'mieles.brix' => 'fa-chart-column',
+        'gestion' => 'fa-gears',
         'blancos.control' => 'fa-vial',
         'consolidacion' => 'fa-layer-group',
     ];
@@ -123,7 +125,7 @@ function labc_history_href(string $area): ?string
     }
 }
 
-$sampleTypeKeys = ['suelos', 'aguas', 'foliares', 'cana', 'mieles'];
+$sampleTypeKeys = ['suelos', 'aguas', 'foliares', 'cana', 'mieles', 'gestion'];
 $sampleTypesByKey = [
     'suelos' => ['id_tipo' => 1],
     'aguas' => ['id_tipo' => 2],
@@ -185,8 +187,8 @@ foreach ($suelosAnalyses as $analisis) {
 
 $suelosFisicos = labc_visible_analysis([
     ['key' => 'suelos.textura', 'href' => '../controllers/Suelos/textura_controller.php', 'label' => 'Textura'],
-    ['key' => 'suelos.humedad', 'href' => '../controllers/Suelos/humedad_residual_controller.php', 'label' => 'Humedad Residual'],
-    ['key' => 'suelos.humedad_residual', 'href' => '../controllers/Suelos/humedad_gravimetrica_controller.php', 'label' => 'Humedad gravimetrica'],
+    ['key' => 'suelos.humedad_residual', 'href' => '../controllers/Suelos/humedad_residual_controller.php', 'label' => 'Humedad Residual'],
+    ['key' => 'suelos.humedad_gravimetrica', 'href' => '../controllers/Suelos/humedad_gravimetrica_controller.php', 'label' => 'Humedad gravimetrica'],
     ['key' => 'suelos.dap', 'href' => '../controllers/Suelos/dap_controller.php', 'label' => 'Densidad aparente (DAP)'],
     ['key' => 'suelos.cc', 'href' => '../controllers/Suelos/cc_controller.php', 'label' => 'Capacidad de Campo'],
     ['key' => 'suelos.pmp', 'href' => '../controllers/Suelos/pmp_controller.php', 'label' => 'Punto de Marchitez Permanente'],
@@ -247,15 +249,7 @@ $canaCards = labc_prepare_cards($canaAnalyses, 'cana.humedad');
 $mielesAnalyses = labc_visible_analysis([
     ['key' => 'mieles.brix', 'href' => '../controllers/Mieles/brix_controller.php', 'label' => 'Brix'],
 ]);
-$mielesCards = labc_prepare_cards(array_merge($mielesAnalyses, [
-    [
-        'key' => 'mieles.proximos',
-        'href' => '#',
-        'label' => 'Próximos Análisis',
-        'icon' => 'fa-circle-plus',
-        'ghost' => true,
-    ],
-]), 'mieles.brix');
+$mielesCards = labc_prepare_cards($mielesAnalyses, 'mieles.brix');
 
 $canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
 $canBlancoControl = lab_can('laboratorio.blanco_control.ver');
@@ -304,6 +298,8 @@ if ($canCatalogoMuestras) {
     ];
 }
 $utilityCards = labc_prepare_cards($utilityCards, 'consolidacion');
+
+$gestionCards = $utilityCards;
 
 $sampleTypeConfigs = [
     'suelos' => [
@@ -359,6 +355,16 @@ $sampleTypeConfigs = [
         'cards' => $mielesCards,
         'count' => count($mielesCards),
     ],
+    'gestion' => !empty($gestionCards) ? [
+        'id' => 'gestion',
+        'nav_label' => 'Gestión adicional',
+        'title' => 'Gestión adicional',
+        'subtitle' => 'Accesos rápidos para consolidación y controles generales.',
+        'theme' => 'utility',
+        'history_url' => labc_history_href('gestion'),
+        'cards' => $gestionCards,
+        'count' => count($gestionCards),
+    ] : null,
 ];
 
 $sections = [];
@@ -605,7 +611,7 @@ foreach ($displayOrder as $sectionId) {
                     </section>
                 <?php endforeach; ?>
 
-                <?php if (!empty($utilityCards)): ?>
+                <?php if (false && !empty($utilityCards)): ?>
                     <section class="form-section utility-section">
                         <div class="section-head">
                             <div>

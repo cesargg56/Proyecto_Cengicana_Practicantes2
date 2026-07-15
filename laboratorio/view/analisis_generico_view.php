@@ -35,6 +35,10 @@ $resultado = $resultado ?? null;
                         <div class="field">
                             <?php foreach ($config['fields'] as $field): ?>
                                 <?php if (!empty($field['computed'])) { continue; } ?>
+                                <?php if (
+                                    (($config['key'] ?? '') === 'cana.peso_seco' && in_array(($field['name'] ?? ''), ['bandeja_humeda', 'torta_seca'], true))
+                                    || (($config['key'] ?? '') === 'cana.fibra' && ($field['name'] ?? '') === 'fibra')
+                                ) { continue; } ?>
                                 <?php $type = ($field['type'] ?? 'number') === 'text' ? 'text' : 'number'; ?>
                                 <label><?= htmlspecialchars($field['label'], ENT_QUOTES, 'UTF-8') ?>
                                     <input

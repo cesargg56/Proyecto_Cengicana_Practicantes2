@@ -187,9 +187,15 @@ h1 {
     text-transform: uppercase;
 }
 
-.estado-revisar {
+.estado-revisar,
+.estado-revision {
     background: #fff2b8;
     color: #6a4b00;
+}
+
+.estado-en-proceso {
+    background: #fff3df;
+    color: #7a4b00;
 }
 
 .estado-aprobado {

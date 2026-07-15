@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/formulario_revision_helper.php';
+require_once __DIR__ . '/../includes/captura_lotes_helper.php';
 
 $labFooterLoteEntrada = $_POST['lote'] ?? $_GET['lote'] ?? '';
 if (is_array($labFooterLoteEntrada)) {
@@ -998,36 +999,17 @@ if (!function_exists('labFooterGuardarFormulariosBase')) {
     }
 }
 
-$labFooterContexto = labFooterContextoAnalisis();
-$labFooterLotesContexto = labFooterLotesPorAnalisis($labFooterContexto);
-$labFooterMuestrasContexto = labFooterMuestrasPorLote($labFooterContexto);
-$labFooterMuestrasFallback = labFooterMuestrasPorLote(null);
-$labFooterMuestras = $labFooterContexto ? $labFooterMuestrasContexto : $labFooterMuestrasFallback;
-$labFooterLotes = $labFooterContexto ? $labFooterLotesContexto : array_keys($labFooterMuestras);
-if (!$labFooterLotes) {
-    $labFooterMuestras = $labFooterMuestrasFallback;
-    $labFooterLotes = array_keys($labFooterMuestras);
-}
-if (!$labFooterLotes) {
-    $labFooterLotes = labFooterTodosLosLotes();
-}
-sort($labFooterLotes);
-$labFooterMuestrasUsadas = labFooterMuestrasUsadasPorTablaActual();
-$labFooterLotes = $labFooterContexto !== null ? $labFooterLotesContexto : labFooterTodosLosLotes();
-$labFooterMuestras = labFooterMuestrasPorLote($labFooterContexto);
+$labFooterContexto = labCapturaContextoAnalisis();
+$labCapturaLotes = labObtenerLotesDisponiblesCaptura($labFooterContexto, $lote_actual);
+$labFooterLotes = $labCapturaLotes['lotes'];
+$labFooterMuestras = $labCapturaLotes['muestras'];
+$labFooterMuestrasUsadas = $labCapturaLotes['muestrasUsadas'];
+$lote_actual = $labCapturaLotes['loteActual'];
 $fecha_actual_footer = trim((string) ($_POST['fecha'] ?? date('Y-m-d')));
 $analista_actual = trim((string) ($_POST['analista'] ?? $_POST['tecnico'] ?? ''));
 $observaciones = trim((string) ($_POST['observaciones'] ?? $observaciones ?? ''));
 $labFooterGuardado = null;
 $labFooterResultadosLegacy = isset($resultados) && is_array($resultados) ? array_values($resultados) : [];
-
-if (
-    $lote_actual !== ''
-    && !in_array($lote_actual, $labFooterLotes, true)
-    && !labFooterAnalisisYaIngresado($labFooterContexto, $lote_actual)
-) {
-    array_unshift($labFooterLotes, $lote_actual);
-}
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $labFooterContexto && empty($labSkipFooterBaseSave)) {
     $analisisGuardado = !isset($resultado)
@@ -1076,8 +1058,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $labFooterContexto && empty
       'muestras' => $labFooterMuestras,
       'muestrasUsadas' => $labFooterMuestrasUsadas,
       'loteActual' => $lote_actual,
+      'solicitudes' => $labCapturaLotes['solicitudes'] ?? [],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 
   <button type="submit" class="btn-submit">Guardar formularios en base de datos</button>
 </div>
 <script src="../../js/analisis_tabla.js?v=<?= (int) @filemtime(__DIR__ . '/../js/analisis_tabla.js') ?>" defer></script>
+
+
+
+

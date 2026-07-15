@@ -38,6 +38,7 @@ $stmt = $conexion->query("
            AND f.id_tipo_analisis = ta.id_tipo
          WHERE lr2.id_lote = l.id_lote
     )
+      AND ta.id_tipo_muestra = s.id_tipo
     GROUP BY
         l.id_lote,
         l.codigo_lote,
@@ -119,7 +120,7 @@ function fechaPendiente($fecha): string
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitudes pendientes</title>
-    <link rel="stylesheet" href="../css/solicitudes_pendientes.css">
+    <link rel="stylesheet" href="../css/solicitudes_pendientes.css?v=<?= filemtime(__DIR__ . '/../css/solicitudes_pendientes.css') ?>">
 </head>
 <body>
 <nav>
@@ -147,14 +148,14 @@ function fechaPendiente($fecha): string
         </section>
     <?php else: ?>
         <?php foreach ($pendientesPorTipo as $grupo): ?>
-            <section class="pending-type-section">
-                <div class="pending-type-header">
-                    <div>
+            <details class="pending-type-section">
+                <summary class="pending-type-header">
+                    <div class="pending-type-summary-copy">
                         <span class="eyebrow">Tipo de muestra</span>
                         <h2 class="pending-type-title"><?= ePendientes($grupo['label']) ?></h2>
                     </div>
                     <span class="count-pill"><?= count($grupo['items']) ?> lotes</span>
-                </div>
+                </summary>
 
                 <div class="pending-grid">
                     <?php foreach ($grupo['items'] as $item): ?>
@@ -186,7 +187,7 @@ function fechaPendiente($fecha): string
                         </article>
                     <?php endforeach; ?>
                 </div>
-            </section>
+            </details>
         <?php endforeach; ?>
     <?php endif; ?>
 </main>

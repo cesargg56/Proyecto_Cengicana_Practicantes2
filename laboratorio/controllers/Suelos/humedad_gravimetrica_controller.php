@@ -6,6 +6,15 @@ require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../includes/shared_lot_controls_helper.php';
 require_once __DIR__ . '/../../models/Suelos/humedad_gravimetrica_model.php';
 
+$labAnalysisContexto = [
+    'tipos' => ['suelos', 'suelo'],
+    'analisis' => ['Humedad'],
+    'label' => 'Humedad gravimetrica en Suelos',
+];
+$labAnalysisLegacyConfig = $labAnalysisContexto;
+$GLOBALS['labAnalysisContexto'] = $labAnalysisContexto;
+$GLOBALS['labAnalysisLegacyConfig'] = $labAnalysisLegacyConfig;
+
 $resultado = lab_analysis_take_flash();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

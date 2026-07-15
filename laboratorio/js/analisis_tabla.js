@@ -5,13 +5,13 @@
   function parseConfig(form) {
     const configNode = form.querySelector(DATA_SELECTOR);
     if (!configNode) {
-      return { lotes: [], muestras: {}, muestrasUsadas: {}, loteActual: '' };
+      return { lotes: [], muestras: {}, muestrasUsadas: {}, loteActual: '', solicitudes: [] };
     }
 
     try {
       return JSON.parse(configNode.textContent || '{}');
     } catch (error) {
-      return { lotes: [], muestras: {}, muestrasUsadas: {}, loteActual: '' };
+      return { lotes: [], muestras: {}, muestrasUsadas: {}, loteActual: '', solicitudes: [] };
     }
   }
 
@@ -80,6 +80,85 @@
         seen.add(value);
         return true;
       });
+  }
+
+  function buildSelectionState(config) {
+    const solicitudes = Array.isArray(config.solicitudes) ? config.solicitudes : [];
+    const normalizedSolicitudes = [];
+    const lotes = [];
+    const muestras = {};
+    const muestrasUsadas = {};
+    const loteLabels = {};
+    const idsByCodigo = {};
+    const seenIds = new Set();
+
+    solicitudes.forEach((solicitud) => {
+      const idSolicitud = normalizedValue(solicitud?.id_solicitud);
+      const codigoLote = normalizedValue(solicitud?.codigo_lote);
+      if (!idSolicitud || !codigoLote || seenIds.has(idSolicitud)) {
+        return;
+      }
+
+      seenIds.add(idSolicitud);
+      lotes.push(idSolicitud);
+      loteLabels[idSolicitud] = codigoLote;
+      muestras[idSolicitud] = Array.isArray(solicitud?.muestras)
+        ? solicitud.muestras.map((value) => normalizedValue(value)).filter(Boolean)
+        : [];
+      muestrasUsadas[idSolicitud] = Array.isArray(solicitud?.muestrasUsadas)
+        ? solicitud.muestrasUsadas.map((value) => normalizedValue(value)).filter(Boolean)
+        : [];
+      idsByCodigo[codigoLote] ??= [];
+      idsByCodigo[codigoLote].push(idSolicitud);
+      normalizedSolicitudes.push({
+        id_solicitud: idSolicitud,
+        id_lote: normalizedValue(solicitud?.id_lote),
+        codigo_lote: codigoLote,
+        tipo_muestra: normalizedValue(solicitud?.tipo_muestra),
+        muestras: muestras[idSolicitud],
+        muestrasUsadas: muestrasUsadas[idSolicitud],
+      });
+    });
+
+    if (normalizedSolicitudes.length) {
+      return {
+        useSolicitudes: true,
+        lotes,
+        muestras,
+        muestrasUsadas,
+        loteLabels,
+        idsByCodigo,
+        solicitudes: normalizedSolicitudes,
+      };
+    }
+
+    return {
+      useSolicitudes: false,
+      lotes: lotesFromConfig(config),
+      muestras: config.muestras || {},
+      muestrasUsadas: config.muestrasUsadas || {},
+      loteLabels: {},
+      idsByCodigo: {},
+      solicitudes: [],
+    };
+  }
+
+  function resolveInitialLoteKey(config, state) {
+    const requested = normalizedValue(config.loteActual);
+    if (!requested || !state.lotes.length) {
+      return state.lotes[0] || '';
+    }
+
+    if (!state.useSolicitudes) {
+      return requested;
+    }
+
+    if (state.lotes.includes(requested)) {
+      return requested;
+    }
+
+    const matches = state.idsByCodigo?.[requested] || [];
+    return matches[0] || state.lotes[0] || '';
   }
 
   function muestrasForLote(muestras, lote) {
@@ -154,7 +233,7 @@
     return input;
   }
 
-  function fillLoteOptions(select, lotes, selected) {
+  function fillLoteOptions(select, lotes, selected, loteLabels = {}) {
     select.innerHTML = '';
 
     const empty = document.createElement('option');
@@ -165,10 +244,23 @@
     lotes.forEach((lote) => {
       const option = document.createElement('option');
       option.value = lote;
-      option.textContent = lote;
+      option.textContent = loteLabels[lote] || lote;
       option.selected = lote === selected;
+      if (loteLabels[lote]) {
+        option.dataset.codigoLote = loteLabels[lote];
+      }
       select.appendChild(option);
     });
+  }
+
+  function getLoteSelect(row) {
+    if (!row) {
+      return null;
+    }
+
+    return row.querySelector('select[data-lab-lote-select="1"]')
+      || row.querySelector('select[name="id_solicitud[]"]')
+      || row.querySelector('select[name="lote[]"]');
   }
 
   function buildLaboratorioSpecialOptions(definitions) {
@@ -265,7 +357,7 @@
   }
 
   function laboratorioKey(row) {
-    const lote = row.querySelector('select[name="lote[]"]')?.value || '';
+    const lote = getLoteSelect(row)?.value || '';
     const numero = row.querySelector('select[name="numero_laboratorio[]"]')?.value || '';
     return lote && numero ? `${lote}||${numero}` : '';
   }
@@ -287,7 +379,8 @@
     });
 
     rows.forEach((row) => {
-      const lote = row.querySelector('select[name="lote[]"]')?.value || '';
+      const loteSelect = getLoteSelect(row);
+      const loteValue = loteSelect?.value || '';
       const labSelect = row.querySelector('select[name="numero_laboratorio[]"]');
       const current = labSelect?.value || '';
 
@@ -302,7 +395,7 @@
           return;
         }
 
-        const key = lote ? `${lote}||${option.value}` : '';
+        const key = loteValue ? `${loteValue}||${option.value}` : '';
         const count = selected.get(key) || 0;
         const isCurrent = option.value === current;
         option.disabled = !isCurrent && count > 0;
@@ -675,6 +768,8 @@
     lotes,
     muestras,
     muestrasUsadas,
+    loteLabels,
+    useSolicitudes,
     selectedLote,
     selectedLaboratorio,
     rowIndex,
@@ -696,10 +791,21 @@
 
     const loteCell = document.createElement('td');
     const loteSelect = document.createElement('select');
-    loteSelect.name = 'lote[]';
+    loteSelect.name = useSolicitudes ? 'id_solicitud[]' : 'lote[]';
     loteSelect.required = true;
-    fillLoteOptions(loteSelect, lotes, selectedLote);
+    loteSelect.dataset.labLoteSelect = '1';
+    fillLoteOptions(loteSelect, lotes, selectedLote, loteLabels || {});
     loteCell.appendChild(loteSelect);
+
+    let loteHiddenInput = null;
+    if (useSolicitudes) {
+      loteHiddenInput = document.createElement('input');
+      loteHiddenInput.type = 'hidden';
+      loteHiddenInput.name = 'lote[]';
+      loteHiddenInput.value = loteLabels?.[selectedLote] || '';
+      loteHiddenInput.dataset.labLoteMirror = '1';
+      loteCell.appendChild(loteHiddenInput);
+    }
     row.appendChild(loteCell);
 
     const labCell = document.createElement('td');
@@ -731,6 +837,10 @@
     row.appendChild(labCell);
 
     loteSelect.addEventListener('change', () => {
+      if (loteHiddenInput) {
+        loteHiddenInput.value = loteLabels?.[loteSelect.value] || '';
+      }
+
       if (typeof onLoteChange === 'function') {
         onLoteChange(row, loteSelect.value);
         return;
@@ -801,7 +911,8 @@
     const footer = form.querySelector('.form-footer');
     const formBody = form.querySelector('.form-body') || form;
     const config = parseConfig(form);
-    const lotes = lotesFromConfig(config);
+    const captureState = buildSelectionState(config);
+    const lotes = captureState.lotes;
     const useSharedRows = form.dataset.labSharedRows === '1';
     const primaryControls = Array.from(formBody.querySelectorAll('input, select, textarea'))
       .filter((control) => isPrimaryControl(control, footer));
@@ -868,8 +979,10 @@
         rows.push(createRow({
           columnDefinitions,
           lotes,
-          muestras: config.muestras || {},
-          muestrasUsadas: config.muestrasUsadas || {},
+          muestras: captureState.muestras,
+          muestrasUsadas: captureState.muestrasUsadas,
+          loteLabels: captureState.loteLabels,
+          useSolicitudes: captureState.useSolicitudes,
           selectedLote,
           selectedLaboratorio: '',
           rowIndex: dataRows(tbody).length + rows.length,
@@ -883,16 +996,18 @@
       });
 
       laboratorioValues(
-        config.muestras || {},
+        captureState.muestras,
         selectedLote,
         laboratorioSpecialOptions,
-        config.muestrasUsadas || {}
+        captureState.muestrasUsadas
       ).forEach((numeroLaboratorio) => {
         rows.push(createRow({
           columnDefinitions,
           lotes,
-          muestras: config.muestras || {},
-          muestrasUsadas: config.muestrasUsadas || {},
+          muestras: captureState.muestras,
+          muestrasUsadas: captureState.muestrasUsadas,
+          loteLabels: captureState.loteLabels,
+          useSolicitudes: captureState.useSolicitudes,
           selectedLote,
           selectedLaboratorio: numeroLaboratorio,
           rowIndex: dataRows(tbody).length + rows.length,
@@ -940,16 +1055,18 @@
       updateLaboratorioAvailability(tbody);
     }
 
-    appendLoteGroup(normalizedValue(config.loteActual) || lotes[0] || '');
+    appendLoteGroup(resolveInitialLoteKey(config, captureState) || lotes[0] || '');
 
     wrapper.querySelector('[data-add-row]').addEventListener('click', () => {
       const lastRow = lastDataRow(tbody);
-      const lastLote = lastRow?.querySelector('select[name="lote[]"]')?.value || normalizedValue(config.loteActual) || '';
+      const lastLote = getLoteSelect(lastRow)?.value || resolveInitialLoteKey(config, captureState) || '';
       tbody.appendChild(createRow({
         columnDefinitions,
         lotes,
-        muestras: config.muestras || {},
-        muestrasUsadas: config.muestrasUsadas || {},
+        muestras: captureState.muestras,
+        muestrasUsadas: captureState.muestrasUsadas,
+        loteLabels: captureState.loteLabels,
+        useSolicitudes: captureState.useSolicitudes,
         selectedLote: lastLote,
         selectedLaboratorio: '',
         rowIndex: dataRows(tbody).length,
@@ -963,7 +1080,7 @@
     });
 
     wrapper.querySelector('[data-add-lote]').addEventListener('click', () => {
-      const lastLote = lastDataRow(tbody)?.querySelector('select[name="lote[]"]')?.value || normalizedValue(config.loteActual) || '';
+      const lastLote = getLoteSelect(lastDataRow(tbody))?.value || resolveInitialLoteKey(config, captureState) || '';
       appendLoteGroup(nextLote(lotes, lastLote));
     });
 

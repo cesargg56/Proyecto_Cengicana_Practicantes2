@@ -6,6 +6,15 @@ require_once __DIR__ . '/../../includes/analisis_post_helper.php';
 require_once __DIR__ . '/../../includes/shared_lot_controls_helper.php';
 require_once __DIR__ . '/../../models/Suelos/dap_model.php';
 
+$labAnalysisContexto = [
+    'tipos' => ['suelos', 'suelo'],
+    'analisis' => ['Densidad aparente (DAP)'],
+    'label' => 'Densidad Aparente (DAP) en Suelos',
+];
+$labAnalysisLegacyConfig = $labAnalysisContexto;
+$GLOBALS['labAnalysisContexto'] = $labAnalysisContexto;
+$GLOBALS['labAnalysisLegacyConfig'] = $labAnalysisLegacyConfig;
+
 $resultado = lab_analysis_take_flash();
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -37,7 +46,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         ]);
     }
 
-    $resultado = lab_resultado_multiple($resultados, 'dap');
+    $resultado = lab_resultado_multiple($resultados, 'densidad aparente (DAP)');
 }
 
 lab_analysis_redirect_after_success($resultado);

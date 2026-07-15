@@ -1,45 +1,25 @@
 <?php
 
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../legacy_analysis_model_helper.php';
 
 function guardarHumedadResidualSuelo(array $data, array $metadata = []): array
 {
     $conn = (new Conexion())->conectar();
-
-    $stmt = $conn->prepare("
-  INSERT INTO suelo_humedad_residual
-(
-    id_formulario,
-    no_lab,
-    control,
-    peso_caja,
-    peso_muestra_humeda,
-    peso_caja_muestra_humeda,
-    peso_caja_muestra_seca,
-    humedad_residual
-)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-
-    $ok = $stmt->execute([
-        $metadata['id_formulario'] ?? null,
-        $metadata['no_lab'] ?? null,
-    $data['Control'] ?? 0,
-
-        $data['PesoCaja'] ?? 0,
-        $data['PesoMuestraHumedo'] ?? 0,
-        $data['PesoCajaMHumeda'] ?? 0,
-        $data['PesoCajaMseca'] ?? 0,
-        $data['PorHGrav'] ?? 0,
-    ]);
-
-    $id = $ok ? (int)$conn->lastInsertId() : false;
+    $id = labLegacyInsertAnalysisRow($conn, 'suelo_humedad_residual', [
+        'control' => $data['Control'] ?? 0,
+        'peso_caja' => $data['PesoCaja'] ?? 0,
+        'peso_muestra_humeda' => $data['PesoMuestraHumedo'] ?? 0,
+        'peso_caja_muestra_humeda' => $data['PesoCajaMHumeda'] ?? 0,
+        'peso_caja_muestra_seca' => $data['PesoCajaMseca'] ?? 0,
+        'humedad_residual' => $data['PorHGrav'] ?? 0,
+    ], $metadata);
 
     if ($id !== false) {
         return [
             'exito' => true,
             'mensaje' => 'Humedad residual guardada correctamente.',
-            'id' => $id
+            'id' => (int) $id
         ];
     }
 

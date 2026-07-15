@@ -427,6 +427,12 @@ main {
   border: 1px solid #8bcce5;
 }
 
+.estado-en-proceso {
+  color: #7a4b00;
+  background: linear-gradient(180deg, #fff3df, #ffe1b0);
+  border: 1px solid #e8b86a;
+}
+
 .estado-aprobado {
   color: var(--green-800);
   background: linear-gradient(180deg, #f0fbec, #dff3d8);
