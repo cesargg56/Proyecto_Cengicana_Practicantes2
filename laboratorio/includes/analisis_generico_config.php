@@ -233,7 +233,7 @@ function lab_generic_analysis_configs(): array
                 ['name' => 'ingenio', 'label' => 'Ingenio', 'type' => 'text'],
                 ['name' => 'dia_zafra', 'label' => 'Dia zafra', 'type' => 'text'],
                 ['name' => 'brix_obs', 'label' => 'Brix obs.'],
-                ['name' => 'brix_corr', 'label' => 'Brix corr.'],
+                ['name' => 'brix_corr', 'label' => 'Brix corr.', 'computed' => true],
             ],
         ],
     ];
