@@ -201,6 +201,7 @@ $suelosQuimicos = labc_visible_analysis([
     ['key' => 'suelos.boro', 'href' => '../controllers/Suelos/boro_controller.php', 'label' => 'Boro'],
     ['key' => 'suelos.azufre', 'href' => '../controllers/Suelos/azufre_controller.php', 'label' => 'Azufre'],
     ['key' => 'suelos.fosforo', 'href' => '../controllers/Suelos/fosforo_controller.php', 'label' => 'Fósforo'],
+    ['key' => 'suelos.conductividad_electrica', 'href' => '../controllers/Suelos/conductividad_electrica_controller.php', 'label' => 'Conductividad Eléctrica'],
 ]);
 
 
