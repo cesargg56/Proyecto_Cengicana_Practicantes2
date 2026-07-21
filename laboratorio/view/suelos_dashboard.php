@@ -291,38 +291,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['lote'])) {
             gap: 10px;
             margin-top: 15px;
         }
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            flex: 1;
-        }
-        .btn-view {
-            background: #2196F3;
-            color: white;
-        }
-        .btn-view:hover {
-            background: #0b7dda;
-        }
-        .btn-download-all {
-            padding: 12px 24px;
-            background: #ff9800;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .btn-download-all:hover {
-            background: #e68900;
-        }
         .resumen {
             background: white;
             padding: 20px;
