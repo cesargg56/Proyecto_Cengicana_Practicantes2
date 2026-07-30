@@ -102,12 +102,13 @@ table{background:white;}
         </div>
 
         <div class="panel-body">
-            <form method="POST">
+            <form method="POST" id="form-busqueda-solicitudes">
                 <div class="row">
                     <div class="col-sm-4">
                         <input
                             type="text"
                             name="campo"
+                            id="campo-busqueda-solicitudes"
                             class="form-control"
                             placeholder="Buscar participante, curso, correo o ingenio"
                             value="<?= htmlspecialchars($campo) ?>"
@@ -178,6 +179,25 @@ table{background:white;}
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var form = document.getElementById('form-busqueda-solicitudes');
+    var input = document.getElementById('campo-busqueda-solicitudes');
+    var temporizador;
+
+    if (!form || !input) {
+        return;
+    }
+
+    input.addEventListener('input', function () {
+        window.clearTimeout(temporizador);
+        temporizador = window.setTimeout(function () {
+            form.submit();
+        }, 250);
+    });
+})();
+</script>
 
 </body>
 </html>
