@@ -127,7 +127,7 @@ $stmt->execute($params);
                 <?php endif; ?>
 
                 <div class="row">
-                    <form action="<?php $_SERVER['PHP_SELF']; ?>" method="POST">
+                    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST" id="form-busqueda-cursos">
                         <div class="col-sm-4">
                             <input type="text" placeholder="Nombre del curso" class="form-control" name="campo" id="campo" value="<?php echo htmlspecialchars($campo); ?>">
                         </div>
@@ -225,6 +225,24 @@ $stmt->execute($params);
         });
     </script>
     <?php endif; ?>
+    <script type="text/javascript">
+        (function () {
+            var form = document.getElementById('form-busqueda-cursos');
+            var input = document.getElementById('campo');
+            var temporizador;
+
+            if (!form || !input) {
+                return;
+            }
+
+            input.addEventListener('input', function () {
+                window.clearTimeout(temporizador);
+                temporizador = window.setTimeout(function () {
+                    form.submit();
+                }, 250);
+            });
+        })();
+    </script>
 </body>
 </html>
 

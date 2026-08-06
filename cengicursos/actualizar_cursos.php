@@ -6,22 +6,52 @@ cengi_require_admin();
 require_once("conexion.php");
 
 $db = conectar();
+$resultado = false;
+$error = '';
+
+function obtener_post_actualizacion($clave)
+{
+    $valor = $_POST[$clave] ?? null;
+
+    if (!is_string($valor)) {
+        throw new InvalidArgumentException("Falta el campo obligatorio: {$clave}.");
+    }
+
+    $valor = trim($valor);
+
+    if ($valor === '') {
+        throw new InvalidArgumentException("El campo {$clave} no puede ir vacio.");
+    }
+
+    return $valor;
+}
 
 if (!empty($_POST['id']))
 {
     $id = (int)$_POST['id'];
 
-    $descripcion = $_POST['categorias'];
-    $ingenio = $_POST['ingenio'];
-
-    $tipo = $_POST['tipo'];
-
-    $curso = $_POST['nombre_cursos'];
-    $jornada = $_POST['jornada_cursos'];
-    $horario = $_POST['horario'];
-    $dias = $_POST['dias'];
-
     try {
+        $descripcion = (int)obtener_post_actualizacion('categorias');
+        $ingenio = (int)obtener_post_actualizacion('ingenio');
+        $tipo = obtener_post_actualizacion('tipo');
+        $curso = obtener_post_actualizacion('nombre_cursos');
+        $jornada = obtener_post_actualizacion('jornada_cursos');
+        $horario = obtener_post_actualizacion('horario');
+        $dias = obtener_post_actualizacion('dias');
+        $inicio = obtener_post_actualizacion('inicio');
+        $fin = obtener_post_actualizacion('fin');
+
+        if ($descripcion <= 0 || $ingenio <= 0) {
+            throw new InvalidArgumentException('Debe seleccionar una categoria y un ingenio validos.');
+        }
+
+        if (strtotime($inicio) === false || strtotime($fin) === false) {
+            throw new InvalidArgumentException('Las fechas de inicio y fin no son validas.');
+        }
+
+        if ($inicio > $fin) {
+            throw new InvalidArgumentException('La fecha de inicio no puede ser mayor a la fecha final.');
+        }
 
         $sql = "
             UPDATE cursos
@@ -32,7 +62,9 @@ if (!empty($_POST['id']))
                 nombre_cursos = ?,
                 jornada_cursos = ?,
                 dias = ?,
-                horario = ?
+                horario = ?,
+                inicio = ?,
+                fin = ?
             WHERE id = ?
         ";
 
@@ -46,10 +78,12 @@ if (!empty($_POST['id']))
             $jornada,
             $dias,
             $horario,
+            $inicio,
+            $fin,
             $id
         ]);
 
-    } catch (PDOException $e) {
+    } catch (Throwable $e) {
 
         $resultado = false;
         $error = $e->getMessage();
