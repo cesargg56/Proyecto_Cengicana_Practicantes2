@@ -5,10 +5,9 @@
 body {
   min-height: 100vh;
   color: var(--text-main);
-  background:
-    radial-gradient(circle at top left, rgba(151, 196, 89, 0.16), transparent 30%),
-    radial-gradient(circle at top right, rgba(15, 110, 86, 0.08), transparent 26%),
-    linear-gradient(180deg, #f7faf3 0%, #eef4e7 100%);
+  background: var(--lab-body-background);
+  background-size: var(--lab-body-background-size);
+  background-position: var(--lab-body-background-position);
   overflow-x: hidden;
 }
 
@@ -33,7 +32,7 @@ body::before {
   gap: 16px;
   background: rgba(255, 255, 255, 0.88);
   border-right: 1px solid var(--panel-border);
-  box-shadow: 8px 0 28px rgba(59, 109, 17, 0.08);
+  box-shadow: 8px 0 28px rgba(35, 37, 35, 0.08);
   backdrop-filter: blur(14px);
   overflow: auto;
 }
@@ -54,8 +53,8 @@ body::before {
   height: 46px;
   border-radius: 14px;
   color: var(--white);
-  background: linear-gradient(180deg, var(--green-400), var(--green-700, var(--green-600)));
-  box-shadow: 0 12px 22px rgba(99, 153, 34, 0.22);
+  background: linear-gradient(180deg, var(--green-500), var(--green-700));
+  box-shadow: 0 12px 22px rgba(27, 94, 32, 0.22);
   font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -107,14 +106,14 @@ body::before {
 
 .lab-nav-item:hover {
   transform: translateX(2px);
-  background: #eef7df;
+  background: var(--teal-50);
   border-color: var(--green-100);
 }
 
 .lab-nav-item.active {
-  background: linear-gradient(180deg, rgba(151, 196, 89, 0.22), rgba(151, 196, 89, 0.09));
+  background: linear-gradient(180deg, rgba(27, 94, 32, 0.14), rgba(78, 112, 85, 0.08));
   border-color: var(--green-200);
-  box-shadow: 0 10px 22px rgba(59, 109, 17, 0.08);
+  box-shadow: 0 10px 22px rgba(35, 37, 35, 0.08);
 }
 
 .lab-nav-icon {
@@ -124,7 +123,7 @@ body::before {
   width: 28px;
   height: 28px;
   border-radius: 10px;
-  background: #f2f7e8;
+  background: var(--neutral-50);
   color: var(--green-600);
   font-size: 14px;
 }
@@ -165,7 +164,7 @@ body::before {
   padding: 10px 14px;
   text-decoration: none;
   color: var(--white);
-  background: linear-gradient(180deg, var(--green-800), #1d4310);
+  background: linear-gradient(180deg, var(--green-700), var(--green-900));
   border-radius: 10px;
   box-shadow: 0 12px 20px rgba(23, 52, 4, 0.18);
   font-size: 13px;
@@ -221,10 +220,10 @@ body::before {
   align-items: center;
   gap: 10px;
   width: min(100%, 360px);
-  height: 34px;
-  padding: 0 12px;
+  min-height: 42px;
+  padding: 0 14px;
   border: 1px solid rgba(200, 219, 168, 0.88);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.84);
   box-shadow: 0 8px 16px rgba(37, 72, 18, 0.05);
 }
@@ -244,7 +243,7 @@ body::before {
 }
 
 .search-shell input::placeholder {
-  color: #8b9d76;
+  color: var(--text-mute);
 }
 
 .top-actions {
@@ -272,10 +271,10 @@ body::before {
 
 .primary-action {
   gap: 8px;
-  min-height: 30px;
-  padding: 0 14px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, var(--green-800), #1d4310);
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--green-700), var(--green-900));
   color: var(--white);
   font-size: 13px;
   font-weight: 800;
@@ -287,9 +286,9 @@ body::before {
 }
 
 .text-action {
-  min-height: 30px;
-  padding: 0 10px;
-  border-radius: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
   color: var(--text-mute);
   font-size: 13px;
   font-weight: 700;
@@ -301,11 +300,11 @@ body::before {
 }
 
 .icon-action {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
   border-color: rgba(200, 219, 168, 0.95);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--lab-body-surface);
   color: var(--green-800);
   box-shadow: 0 8px 16px rgba(37, 72, 18, 0.05);
 }
@@ -313,7 +312,7 @@ body::before {
 .icon-action:hover {
   transform: translateY(-1px);
   border-color: var(--green-200);
-  background: #f4fbec;
+  background: var(--neutral-50);
 }
 
 .avatar-chip {
@@ -323,7 +322,7 @@ body::before {
   height: 32px;
   border-radius: 50%;
   color: var(--green-900);
-  background: linear-gradient(180deg, #ffffff 0%, #ecf6dd 100%);
+  background: linear-gradient(180deg, var(--lab-body-surface-strong) 0%, var(--neutral-50) 100%);
   border: 1px solid var(--green-200);
   font-size: 10px;
   font-weight: 900;
@@ -335,11 +334,11 @@ body::before {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
-  padding: 26px 28px;
-  border: 1px solid #145a32;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #044b2d 0%, #0d5d36 58%, #06331d 100%);
-  color: #f5fbef;
+  padding: 28px;
+  border: 1px solid var(--green-700);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--green-800) 0%, var(--green-600) 58%, var(--green-900) 100%);
+  color: var(--neutral-50);
   box-shadow: var(--panel-shadow-strong);
 }
 
@@ -354,7 +353,7 @@ body::before {
   font-size: clamp(28px, 3.2vw, 38px);
   line-height: 1.02;
   margin-bottom: 10px;
-  color: #ffffff;
+  color: var(--white);
 }
 
 .hero-headline p {
@@ -389,7 +388,7 @@ body::before {
 .hero-stat strong {
   font-size: 18px;
   font-weight: 900;
-  color: #ffffff;
+  color: var(--white);
 }
 
 .hero-stat small {
@@ -467,7 +466,7 @@ body::before {
 }
 
 .module-card {
-  min-height: 100px;
+  min-height: 104px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -479,7 +478,7 @@ body::before {
   color: var(--text-main);
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(200, 219, 168, 0.88);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   box-shadow: 0 7px 18px rgba(37, 72, 18, 0.05);
   transition:
     transform 0.18s ease,
@@ -498,9 +497,9 @@ body::before {
 .module-card-icon {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
   color: var(--green-600);
   background: rgba(151, 196, 89, 0.12);
   font-size: 14px;
@@ -526,14 +525,14 @@ body::before {
 .module-card.ghost {
   background: rgba(245, 247, 241, 0.9);
   border-style: dashed;
-  color: #9aa88b;
+  color: var(--text-mute);
   box-shadow: none;
   cursor: default;
 }
 
 .module-card.ghost .module-card-icon {
   background: rgba(151, 196, 89, 0.08);
-  color: #9aa88b;
+  color: var(--text-mute);
 }
 
 .theme-utility {
