@@ -19,6 +19,10 @@ if (!lab_can_any([
     lab_forbidden('No tiene permisos para acceder al LABC.');
 }
 
+$canCreateSolicitud = lab_can('laboratorio.solicitudes.crear');
+$canConsolidacion = lab_can('laboratorio.consolidacion.ver');
+$canBlancoControl = lab_can('laboratorio.blanco_control.ver');
+
 function labc_e($value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -396,9 +400,7 @@ $tray = $activeSampleTypeId > 0
                                                 <h3><?= labc_e($analysis['nombre'] ?? '') ?></h3>
                                             </div>
 
-                                            <span class="analysis-state <?= labc_e($analysis['estado']['clase'] ?? 'estado-pendiente') ?>">
-                                                <?= labc_e($analysis['estado']['texto'] ?? 'Pendiente') ?>
-                                            </span>
+
                                         </div>
 
                                         <div class="analysis-meta">
@@ -412,10 +414,7 @@ $tray = $activeSampleTypeId > 0
                                                 <small>Muestras</small>
                                             </span>
 
-                                            <span class="analysis-meta-pill">
-                                                <strong><?= labc_e($analysis['progreso']['texto'] ?? '0 / 0') ?></strong>
-                                                <small>Progreso</small>
-                                            </span>
+
                                         </div>
                                     </div>
 
